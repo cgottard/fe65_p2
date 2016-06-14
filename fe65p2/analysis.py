@@ -74,17 +74,17 @@ def analyze_threshold_scan(h5_file_name):
         Noise_pure[Noise_pure > 0.02] = 0.02
         hist_noise_y, hist_noise_x = np.histogram(Noise_pure, density=False, bins=50)
 
-        gauss_thresh = fit_gauss(hist_thresh_x[4:], hist_thresh_y[3:])
-        gauss_noise = fit_gauss(hist_noise_x[5:], hist_noise_y[4:])
-        thresh_fit_values = {}
-        noise_fit_values = {}
-        thresh_fit_values['height'] = gauss_thresh[0]
-        thresh_fit_values['mu'] = gauss_thresh[1]
-        thresh_fit_values['sigma'] = gauss_thresh[2]
+        #gauss_thresh = fit_gauss(hist_thresh_x[4:], hist_thresh_y[3:])
+        #gauss_noise = fit_gauss(hist_noise_x[5:], hist_noise_y[4:])
+        #thresh_fit_values = {}
+        #noise_fit_values = {}
+        #thresh_fit_values['height'] = gauss_thresh[0]
+        #thresh_fit_values['mu'] = gauss_thresh[1]
+        #thresh_fit_values['sigma'] = gauss_thresh[2]
 
-        noise_fit_values['height'] = gauss_noise[0]
-        noise_fit_values['mu'] = gauss_noise[1]
-        noise_fit_values['sigma'] = gauss_noise[2]
+        #noise_fit_values['height'] = gauss_noise[0]
+        #noise_fit_values['mu'] = gauss_noise[1]
+        #noise_fit_values['sigma'] = gauss_noise[2]
 
         threshold = threshold.reshape(64, 64)
         noise = noise.reshape(64, 64)
@@ -104,7 +104,7 @@ def analyze_threshold_scan(h5_file_name):
                                                       atom=tb.Atom.from_dtype(Threshold_pure.dtype),
                                                       shape=Threshold_pure.shape)
         threshold_pure_hist[:]=Threshold_pure
-        threshold_pure_hist.attrs.fitdata_thresh = thresh_fit_values
+        threshold_pure_hist.attrs.fitdata_thresh = 0 #thresh_fit_values
         noise_pure_hist = in_file_h5.createCArray(Noise_results, name='Noise_pure',
                                                       title='Noise_pure Histogram',
                                                       atom=tb.Atom.from_dtype(Noise_pure.dtype),
@@ -114,7 +114,7 @@ def analyze_threshold_scan(h5_file_name):
                                                  atom=tb.Atom.from_dtype(noise.dtype),
                                                  shape=noise.shape)
         noise_hist[:] = noise
-        noise_pure_hist.attrs.fitdata_noise = noise_fit_values
+        noise_pure_hist.attrs.fitdata_noise = 0 #noise_fit_values
 
 def scurve(x, A, mu, sigma):
     return 0.5 * A * erf((x - mu) / (np.sqrt(2) * sigma)) + 0.5 * A

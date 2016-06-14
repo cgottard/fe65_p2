@@ -268,7 +268,7 @@ class fe65p2(Dut):
                 else:
                     ret = int_pix_data
         else:
-            pix_data = np.recarray((raw_data.shape[0] * 2,), dtype=data_type)
+            pix_data = np.recarray((raw_data.shape[0] * 2), dtype=data_type)
             ret = _interpret_raw_data(raw_data, pix_data)
         return ret
                 

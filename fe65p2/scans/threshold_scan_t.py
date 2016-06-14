@@ -1,27 +1,24 @@
 
 from fe65p2.scan_base import ScanBase
 import fe65p2.plotting as  plotting
-import time
 import fe65p2.analysis as analysis
-
-  
-import logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - [%(levelname)-8s] (%(threadName)-10s) %(message)s")
-
+import time
 import numpy as np
 import bitarray
 import tables as tb
 from bokeh.charts import output_file, show, vplot, hplot, save
 from progressbar import ProgressBar
-import os
+from basil.dut import Dut
+import logging
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - [%(levelname)-8s] (%(threadName)-10s) %(message)s")
 
 local_configuration = {
-    "mask_steps": 4,
-    "repeat_command": 100,
-    "scan_range": [0.0, 0.2, 0.02],
-    "vthin1Dac": 22,
+    "mask_steps": 1,
+    "repeat_command": 10, #as I discard the first tdc measurement
+    "scan_range": [0.1, 1.0, 0.1],
+    "vthin1Dac": 60,
     "preCompVbnDac" : 115,
-    "columns" : [True] * 2 + [False] * 14,
+    "columns" : [True] * 2 + [True] * 14,
     "mask_filename": ''
 }
 
@@ -37,10 +34,13 @@ class ThresholdScan(ScanBase):
         repeat : int
             Number of injections.
         '''
-        
-        INJ_LO = 0.2
-        self.dut['INJ_LO'].set_voltage(INJ_LO, unit='V')
-        
+
+        INJ_LO = 0.0
+        dut = Dut('/home/carlo/basil/examples/lab_devices/agilent33250a_pyserial.yaml')
+        dut.init()
+        logging.info('Connected to '+str(dut['Pulser'].get_info()))
+#       print dut['Pulser'].get_voltage(0, unit='mV'), 'mV'
+
         self.dut['global_conf']['PrmpVbpDac'] = 80
         self.dut['global_conf']['vthin1Dac'] = 255
         self.dut['global_conf']['vthin2Dac'] = 0
@@ -72,19 +72,17 @@ class ThresholdScan(ScanBase):
         self.dut['global_conf']['TDacLd'] = 0
         self.dut['global_conf']['PixConfLd'] = 0
         self.dut.write_global()
-        
-        #self.dut['global_conf']['OneSr'] = 0  #all multi columns in parallel
+
         self.dut['global_conf']['ColEn'][:] = bitarray.bitarray([True] * 16) #(columns)
         self.dut['global_conf']['ColSrEn'][:] = bitarray.bitarray([True] * 16)     
         self.dut.write_global()
-        
-        
+
         self.dut['pixel_conf'].setall(False)
         self.dut.write_pixel()
         self.dut['global_conf']['InjEnLd'] = 1
         self.dut.write_global()
         self.dut['global_conf']['InjEnLd'] = 0
-        
+
         mask_en = np.full([64,64], False, dtype = np.bool)
         mask_tdac = np.full([64,64], 16, dtype = np.uint8)
         
@@ -102,7 +100,7 @@ class ThresholdScan(ScanBase):
         self.dut.write_en_mask(mask_en)
         self.dut.write_tune_mask(mask_tdac)
         
-        self.dut['global_conf']['OneSr'] = 0
+        self.dut['global_conf']['OneSr'] = 1
         self.dut.write_global()
 
         self.dut['inj'].set_delay(100000) #this seems to be working OK problem is probably bad injection on GPAC
@@ -113,22 +111,33 @@ class ThresholdScan(ScanBase):
         self.dut['trigger'].set_delay(400-4)
         self.dut['trigger'].set_width(16)
         self.dut['trigger'].set_repeat(1)
-        self.dut['trigger'].set_en(True)
-        
-        lmask = [1] + ( [0] * (mask_steps-1) )
-        lmask = lmask * ( (64 * 64) / mask_steps  + 1 )
-        lmask = lmask[:64*64]
+        self.dut['trigger'].set_en(False)
+        self.pixel_no = 245
+        lmask = [0]*(64*64)
+        lmask[self.pixel_no] = 1
 
-        scan_range = np.arange(scan_range[0], scan_range[1], scan_range[2]) / 2 # This depends on GPAC setting
-        
+        scan_range = np.arange(scan_range[0], scan_range[1], scan_range[2])
+        logging.debug('Enable TDC')
+        self.dut['tdc']['RESET'] = True
+        self.dut['tdc']['EN_TRIGGER_DIST'] = True
+        self.dut['tdc']['ENABLE_EXTERN'] = False
+        self.dut['tdc']['EN_ARMING'] = False
+        self.dut['tdc']['EN_INVERT_TRIGGER'] = False
+        self.dut['tdc']['EN_INVERT_TDC'] = False
+        self.dut['tdc']['EN_WRITE_TIMESTAMP'] = True
+
+        self.pulse_height = []
         for idx, k in enumerate(scan_range):
-            self.dut['INJ_HI'].set_voltage( float(INJ_LO + k), unit='V')
+            dut['Pulser'].set_voltage(INJ_LO, float(INJ_LO + k), unit='V')
+            self.pulse_height.append(float(k))
+
             time.sleep(0.5)
             
             bv_mask = bitarray.bitarray(lmask)
         
             with self.readout(scan_param_id = idx):
                 logging.info('Scan Parameter: %f (%d of %d)', k, idx+1, len(scan_range))
+                self.dut['tdc']['ENABLE'] = True
                 pbar = ProgressBar(maxval=mask_steps).start()
                 for i in range(mask_steps):
 
@@ -138,13 +147,13 @@ class ThresholdScan(ScanBase):
                     time.sleep(0.1)
                     
                     self.dut['pixel_conf'][:]  = bv_mask
-                    self.dut.write_pixel_col()
+                    self.dut.write_pixel()
                     self.dut['global_conf']['InjEnLd'] = 1
                     #self.dut['global_conf']['PixConfLd'] = 0b11
                     self.dut.write_global()
 
-                    bv_mask[1:] = bv_mask[0:-1] 
-                    bv_mask[0] = 0
+                    #bv_mask[1:] = bv_mask[0:-1]
+                    #bv_mask[0] = 0
 
                     self.dut['global_conf']['vthin1Dac'] = vthin1Dac
                     self.dut['global_conf']['preCompVbnDac'] = preCompVbnDac
@@ -160,6 +169,11 @@ class ThresholdScan(ScanBase):
                         
                     while not self.dut['trigger'].is_done():
                         pass
+
+                time.sleep(0.1)
+                self.dut['tdc'].ENABLE = 0
+                time.sleep(0.1)
+
                     
         scan_results = self.h5_file.create_group("/", 'scan_masks', 'Scan Masks')
         self.h5_file.createCArray(scan_results, 'tdac_mask', obj=mask_tdac)
@@ -167,27 +181,75 @@ class ThresholdScan(ScanBase):
         
         
     def analyze(self):
+        return
+        #
+        # h5_filename = self.output_filename +'.h5'
+        # with tb.open_file(h5_filename, 'r+') as in_file_h5:
+        #     raw_data = in_file_h5.root.raw_data[:]
+        #     meta_data = in_file_h5.root.meta_data[:]
+        #
+        #     hit_data = self.dut.interpret_raw_data(raw_data, meta_data)
+        #     in_file_h5.createTable(in_file_h5.root, 'hit_data', hit_data, filters=self.filter_tables)
+        #
+        # analysis.analyze_threshold_scan(h5_filename)
+        # status_plot = plotting.plot_status(h5_filename)
+        # occ_plot, H = plotting.plot_occupancy(h5_filename)
+        # tot_plot,_ = plotting.plot_tot_dist(h5_filename)
+        # lv1id_plot, _ = plotting.plot_lv1id_dist(h5_filename)
+        # scan_pix_hist, _ = plotting.scan_pix_hist(h5_filename)
+        # t_dac = plotting.t_dac_plot(h5_filename)
+        #
+        # output_file(self.output_filename + '.html', title=self.run_name)
+        # save(vplot(hplot(occ_plot, tot_plot, lv1id_plot), scan_pix_hist, t_dac, status_plot))
+
+
+
+    def tdc_table(self):
+
         h5_filename = self.output_filename +'.h5'
         with tb.open_file(h5_filename, 'r+') as in_file_h5:
+
             raw_data = in_file_h5.root.raw_data[:]
             meta_data = in_file_h5.root.meta_data[:]
-            
-            hit_data = self.dut.interpret_raw_data(raw_data, meta_data)
-            in_file_h5.createTable(in_file_h5.root, 'hit_data', hit_data, filters=self.filter_tables)
+            param, index = np.unique(meta_data['scan_param_id'], return_index=True) #
+            index = index[1:]
+            index = np.append(index, meta_data.shape[0])
+            index = index - 1
+            stops = meta_data['index_stop'][index]
+            split = np.split(raw_data, stops)
+            avg_tdc = []
+            avg_tdc_err = []
+            avg_del = []
+            avg_del_err = []
+            for i in range(len(split[:-1])):
+                print i, split[i].shape
+                rwa_data_param  = split[i]
+                tdc_data = rwa_data_param & 0xFFF  # take last 12 bit
+                tdc_delay = (rwa_data_param & 0x0FF00000) >> 20
+                counter = 0.0
+                TOT_sum = 0.0
+                DEL_sum = 0.0
+                for i in range(tdc_data.shape[0]):
+                    if (i!=0):
+                        print  hex(raw_data[i]), tdc_data[i], tdc_delay[i]
+                        counter += 1
+                        TOT_sum += tdc_data[i]
+                        DEL_sum += tdc_delay[i]
+                avg_tdc.append((float(TOT_sum)/float(counter))*1.5625)
+                avg_tdc_err.append(1.5625/(np.sqrt(12.0*counter)))
+                avg_del.append((float(DEL_sum)/float(counter))*1.5625)
+                avg_del_err.append(1.5625/(np.sqrt(12.0*counter)))
+            avg_tab = np.rec.fromarrays([self.pulse_height, [self.pixel_no]*len(avg_tdc), avg_tdc, avg_tdc_err, avg_del, avg_del_err],
+                                        dtype =[('pulse_V', float), ('pixel_no', int), ('tot_ns', float),('err_tot_ns', float), ('delay_ns', float), ('err_delay_ns', float)])
+            in_file_h5.createTable(in_file_h5.root, 'tdc_data', avg_tab, filters=self.filter_tables)
+            timew_plots = plotting.plot_timewalk(h5_filename)
+            output_file(self.output_filename + '.html', title=self.run_name)
+            save(timew_plots)
 
-        analysis.analyze_threshold_scan(h5_filename)
-        status_plot = plotting.plot_status(h5_filename)
-        occ_plot, H = plotting.plot_occupancy(h5_filename)
-        tot_plot,_ = plotting.plot_tot_dist(h5_filename)
-        lv1id_plot, _ = plotting.plot_lv1id_dist(h5_filename)
-        scan_pix_hist, _ = plotting.scan_pix_hist(h5_filename)
-        t_dac = plotting.t_dac_plot(h5_filename)
-                 
-        output_file(self.output_filename + '.html', title=self.run_name)
-        save(vplot(hplot(occ_plot, tot_plot, lv1id_plot), scan_pix_hist, t_dac, status_plot))
-                
+
+
 if __name__ == "__main__":
 
     scan = ThresholdScan()
     scan.start(**local_configuration)
-    scan.analyze()
+    scan.tdc_table()

@@ -1,7 +1,6 @@
 
 from fe65p2.scan_base import ScanBase
 import fe65p2.plotting as  plotting
-import fe65p2.analysis as analysis
 import time
 import numpy as np
 import bitarray
@@ -14,13 +13,15 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - [%(leve
 
 local_configuration = {
     "mask_steps": 1,
-    "repeat_command": 10, #as I discard the first tdc measurement
-    "scan_range": [0.1, 1.0, 0.1],
+    "repeat_command": 101,
+    "scan_range": [0.1, 0.5, 0.1],
     "vthin1Dac": 60,
     "preCompVbnDac" : 115,
     "columns" : [True] * 2 + [True] * 14,
     "mask_filename": ''
 }
+
+
 
 class ThresholdScan(ScanBase):
     scan_id = "threshold_scan"
@@ -39,7 +40,6 @@ class ThresholdScan(ScanBase):
         dut = Dut('/home/carlo/basil/examples/lab_devices/agilent33250a_pyserial.yaml')
         dut.init()
         logging.info('Connected to '+str(dut['Pulser'].get_info()))
-#       print dut['Pulser'].get_voltage(0, unit='mV'), 'mV'
 
         self.dut['global_conf']['PrmpVbpDac'] = 80
         self.dut['global_conf']['vthin1Dac'] = 255
@@ -103,7 +103,7 @@ class ThresholdScan(ScanBase):
         self.dut['global_conf']['OneSr'] = 1
         self.dut.write_global()
 
-        self.dut['inj'].set_delay(100000) #this seems to be working OK problem is probably bad injection on GPAC
+        self.dut['inj'].set_delay(100000)
         self.dut['inj'].set_width(1000)
         self.dut['inj'].set_repeat(repeat_command)
         self.dut['inj'].set_en(False)
@@ -112,11 +112,12 @@ class ThresholdScan(ScanBase):
         self.dut['trigger'].set_width(16)
         self.dut['trigger'].set_repeat(1)
         self.dut['trigger'].set_en(False)
-        self.pixel_no = 245
+        pixel = [200]
         lmask = [0]*(64*64)
-        lmask[self.pixel_no] = 1
+        lmask[pixel[0]] = 1
 
         scan_range = np.arange(scan_range[0], scan_range[1], scan_range[2])
+        self.pixel_list = np.repeat(pixel, scan_range.shape[0])
         logging.debug('Enable TDC')
         self.dut['tdc']['RESET'] = True
         self.dut['tdc']['EN_TRIGGER_DIST'] = True
@@ -125,11 +126,10 @@ class ThresholdScan(ScanBase):
         self.dut['tdc']['EN_INVERT_TRIGGER'] = False
         self.dut['tdc']['EN_INVERT_TDC'] = False
         self.dut['tdc']['EN_WRITE_TIMESTAMP'] = True
-
-        self.pulse_height = []
+        self.inj_charge = []
         for idx, k in enumerate(scan_range):
             dut['Pulser'].set_voltage(INJ_LO, float(INJ_LO + k), unit='V')
-            self.pulse_height.append(float(k))
+            self.inj_charge.append(float(k)*1000.0*ScanBase.cap_fac(self))
 
             time.sleep(0.5)
             
@@ -138,41 +138,40 @@ class ThresholdScan(ScanBase):
             with self.readout(scan_param_id = idx):
                 logging.info('Scan Parameter: %f (%d of %d)', k, idx+1, len(scan_range))
                 self.dut['tdc']['ENABLE'] = True
-                pbar = ProgressBar(maxval=mask_steps).start()
-                for i in range(mask_steps):
+#               pbar = ProgressBar(maxval=mask_steps).start()
+#               for i in range(mask_steps):
 
-                    self.dut['global_conf']['vthin1Dac'] = 255
-                    self.dut['global_conf']['preCompVbnDac'] = 50
-                    self.dut.write_global()
-                    time.sleep(0.1)
-                    
-                    self.dut['pixel_conf'][:]  = bv_mask
-                    self.dut.write_pixel()
-                    self.dut['global_conf']['InjEnLd'] = 1
-                    #self.dut['global_conf']['PixConfLd'] = 0b11
-                    self.dut.write_global()
-
-                    #bv_mask[1:] = bv_mask[0:-1]
-                    #bv_mask[0] = 0
-
-                    self.dut['global_conf']['vthin1Dac'] = vthin1Dac
-                    self.dut['global_conf']['preCompVbnDac'] = preCompVbnDac
-                    self.dut.write_global() 
-                    time.sleep(0.1)
-                    
-                    self.dut['inj'].start()
-
-                    pbar.update(i)
-                     
-                    while not self.dut['inj'].is_done():
-                        pass
-                        
-                    while not self.dut['trigger'].is_done():
-                        pass
-
+                self.dut['global_conf']['vthin1Dac'] = 255
+                self.dut['global_conf']['preCompVbnDac'] = 50
+                self.dut.write_global()
                 time.sleep(0.1)
+
+                self.dut['pixel_conf'][:]  = bv_mask
+                self.dut.write_pixel()
+                self.dut['global_conf']['InjEnLd'] = 1
+                #self.dut['global_conf']['PixConfLd'] = 0b11
+                self.dut.write_global()
+
+                #bv_mask[1:] = bv_mask[0:-1]
+                #bv_mask[0] = 0
+
+                self.dut['global_conf']['vthin1Dac'] = vthin1Dac
+                self.dut['global_conf']['preCompVbnDac'] = preCompVbnDac
+                self.dut.write_global()
+                time.sleep(0.1)
+
+                self.dut['inj'].start()
+
+              #  pbar.update(i)
+
+                while not self.dut['inj'].is_done():
+                    pass
+
+                while not self.dut['trigger'].is_done():
+                    pass
+
                 self.dut['tdc'].ENABLE = 0
-                time.sleep(0.1)
+
 
                     
         scan_results = self.h5_file.create_group("/", 'scan_masks', 'Scan Masks')
@@ -205,13 +204,12 @@ class ThresholdScan(ScanBase):
 
 
     def tdc_table(self):
-
         h5_filename = self.output_filename +'.h5'
         with tb.open_file(h5_filename, 'r+') as in_file_h5:
-
             raw_data = in_file_h5.root.raw_data[:]
             meta_data = in_file_h5.root.meta_data[:]
-            param, index = np.unique(meta_data['scan_param_id'], return_index=True) #
+            if (meta_data.shape[0]==0): return
+            param, index = np.unique(meta_data['scan_param_id'], return_index=True)
             index = index[1:]
             index = np.append(index, meta_data.shape[0])
             index = index - 1
@@ -222,29 +220,38 @@ class ThresholdScan(ScanBase):
             avg_del = []
             avg_del_err = []
             for i in range(len(split[:-1])):
-                print i, split[i].shape
                 rwa_data_param  = split[i]
                 tdc_data = rwa_data_param & 0xFFF  # take last 12 bit
                 tdc_delay = (rwa_data_param & 0x0FF00000) >> 20
                 counter = 0.0
                 TOT_sum = 0.0
                 DEL_sum = 0.0
-                for i in range(tdc_data.shape[0]):
-                    if (i!=0):
-                        print  hex(raw_data[i]), tdc_data[i], tdc_delay[i]
+                if (tdc_data.shape[0]==0): counter = 1.0
+                for j in range(tdc_data.shape[0]):
+                    if (j>0):
+                       # print  j, hex(raw_data[j]), tdc_data[j], tdc_delay[j]
                         counter += 1
-                        TOT_sum += tdc_data[i]
-                        DEL_sum += tdc_delay[i]
+                        TOT_sum += tdc_data[j]
+                        DEL_sum += tdc_delay[j]
                 avg_tdc.append((float(TOT_sum)/float(counter))*1.5625)
                 avg_tdc_err.append(1.5625/(np.sqrt(12.0*counter)))
                 avg_del.append((float(DEL_sum)/float(counter))*1.5625)
                 avg_del_err.append(1.5625/(np.sqrt(12.0*counter)))
-            avg_tab = np.rec.fromarrays([self.pulse_height, [self.pixel_no]*len(avg_tdc), avg_tdc, avg_tdc_err, avg_del, avg_del_err],
-                                        dtype =[('pulse_V', float), ('pixel_no', int), ('tot_ns', float),('err_tot_ns', float), ('delay_ns', float), ('err_delay_ns', float)])
+            '''
+            If the collected injections are less than the actual ones it's because I injected below threshold.
+            In case the lenght of arrays does not match I discard the proper amount of inj_charge entries.
+            '''
+            if (len(self.inj_charge)-len(avg_tdc) > 0):
+                n = len(self.inj_charge)-len(avg_tdc)
+                self.inj_charge = self.inj_charge[n:]
+
+            avg_tab = np.rec.fromarrays([self.inj_charge, self.pixel_list, avg_tdc, avg_tdc_err, avg_del, avg_del_err],
+                                        dtype =[('charge', float), ('pixel_no', int), ('tot_ns', float),('err_tot_ns', float), ('delay_ns', float), ('err_delay_ns', float)])
             in_file_h5.createTable(in_file_h5.root, 'tdc_data', avg_tab, filters=self.filter_tables)
-            timew_plots = plotting.plot_timewalk(h5_filename)
-            output_file(self.output_filename + '.html', title=self.run_name)
-            save(timew_plots)
+
+        p1, p2 = plotting.plot_timewalk(h5_filename)
+        output_file(self.output_filename + '.html', title=self.run_name)
+        save(vplot(p1,p2))
 
 
 

@@ -22,32 +22,31 @@ def plot_timewalk(h5_file_name):
         tot = tdc_data['tot_ns']
         delay = tdc_data['delay_ns']
         pixel_no = tdc_data['pixel_no']
-        pulse =  tdc_data['pulse_V']
+        charge =  tdc_data['charge']
         pix, stop = np.unique(pixel_no, return_index=True)
         print pix, stop
         TOOLS = "pan,wheel_zoom,box_zoom,reset,save,box_select"
         p1 = figure(title="Timewalk", tools=TOOLS)
-        p1.xaxis.axis_label="TOT (ns)"
+        p1.xaxis.axis_label="Charge (electrons)"
         p1.yaxis.axis_label="Delay (ns)"
         if len(stop)==1:
-            p1.circle(tot[:], delay[:], legend="pixel "+str(pix[0]), size = 8)
-            p1.line(tot[:], delay[:], legend="pixel "+str(pix[0]))
+            p1.circle(charge[:], delay[:], legend="pixel "+str(pix[0]), size = 8)
+            p1.line(charge[:], delay[:], legend="pixel "+str(pix[0]))
         if len(stop)>1:
             for i in len(stop):
                 s1 = int(stop[i-1])
                 s2 = int(stop[i])
-                p1.circle(tot[s1:s2], delay[s1:s2], legend="pixel "+str(pix[i]), size = 8, color=Spectral11[i])
-                p1.line(tot[s1:s2], delay[s1:s2], legend="pixel "+str(pix[i]), color=Spectral11[i])
+                p1.circle(charge[s1:s2], delay[s1:s2], legend="pixel "+str(pix[i]), size = 8, color=Spectral11[i])
+                p1.line(charge[s1:s2], delay[s1:s2], legend="pixel "+str(pix[i]), color=Spectral11[i])
 
         p2 = figure(title="TOT linearity", tools=TOOLS)
-        p2.xaxis.axis_label="Pulse Height (V)"
+        p2.xaxis.axis_label="Charge (electrons)"
         p2.yaxis.axis_label="TOT (ns)"
-        p2.circle(pulse, tot, legend="tot", size = 8)
-        p2.line(pulse, tot, legend="tot")
-
-
-        output_file("attempt.html", title="Timewalk.html")
-        return vplot((p1, p2))
+        p2.circle(charge, tot, legend="tot", size = 8)
+        p2.line(charge, tot, legend="tot")
+#        output_file('complete.html', title='complete')
+#        show(vplot(p1,p2))
+        return p1,p2
 
 
 
@@ -268,4 +267,5 @@ def scan_pix_hist(h5_file_name, scurve_sel_pix = 200):
         return vplot(hplot(hm_th, plt_th_dist), hplot(hm_noise,plt_noise_dist), hplot(hm1, single_scan) ), s_hist
     
 if __name__ == "__main__":
+#    plot_timewalk('/home/carlo/fe65_p2/fe65p2/scans/output_data/20160614_170349_threshold_scan.h5')
     pass

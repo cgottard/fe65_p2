@@ -37,7 +37,10 @@ class ScanBase(object):
         
         self.run_name = time.strftime("%Y%m%d_%H%M%S_") + self.scan_id
         self.output_filename = os.path.join(self.working_dir, self.run_name)
-        
+
+    def cap_fac(self):
+         return 7.9891
+
     def start(self, **kwargs):
                 
         fh = logging.FileHandler(self.output_filename + '.log')

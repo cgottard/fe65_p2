@@ -1,6 +1,7 @@
 
 from fe65p2.scan_base import ScanBase
 import fe65p2.plotting as  plotting
+import fe65p2.analysis as analysis
 import time
 import numpy as np
 import bitarray
@@ -14,7 +15,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - [%(leve
 local_configuration = {
     "mask_steps": 1,
     "repeat_command": 101,
-    "scan_range": [0.1, 0.5, 0.1],
+    "scan_range": [0.05, 1.5, 0.05],
     "vthin1Dac": 60,
     "preCompVbnDac" : 115,
     "columns" : [True] * 2 + [True] * 14,
@@ -112,7 +113,7 @@ class ThresholdScan(ScanBase):
         self.dut['trigger'].set_width(16)
         self.dut['trigger'].set_repeat(1)
         self.dut['trigger'].set_en(False)
-        pixel = [200]
+        pixel = [128]
         lmask = [0]*(64*64)
         lmask[pixel[0]] = 1
 
@@ -180,26 +181,24 @@ class ThresholdScan(ScanBase):
         
         
     def analyze(self):
-        return
-        #
-        # h5_filename = self.output_filename +'.h5'
-        # with tb.open_file(h5_filename, 'r+') as in_file_h5:
-        #     raw_data = in_file_h5.root.raw_data[:]
-        #     meta_data = in_file_h5.root.meta_data[:]
-        #
-        #     hit_data = self.dut.interpret_raw_data(raw_data, meta_data)
-        #     in_file_h5.createTable(in_file_h5.root, 'hit_data', hit_data, filters=self.filter_tables)
-        #
-        # analysis.analyze_threshold_scan(h5_filename)
-        # status_plot = plotting.plot_status(h5_filename)
-        # occ_plot, H = plotting.plot_occupancy(h5_filename)
-        # tot_plot,_ = plotting.plot_tot_dist(h5_filename)
-        # lv1id_plot, _ = plotting.plot_lv1id_dist(h5_filename)
-        # scan_pix_hist, _ = plotting.scan_pix_hist(h5_filename)
-        # t_dac = plotting.t_dac_plot(h5_filename)
-        #
-        # output_file(self.output_filename + '.html', title=self.run_name)
-        # save(vplot(hplot(occ_plot, tot_plot, lv1id_plot), scan_pix_hist, t_dac, status_plot))
+        h5_filename = self.output_filename +'.h5'
+        with tb.open_file(h5_filename, 'r+') as in_file_h5:
+            raw_data = in_file_h5.root.raw_data[:]
+            meta_data = in_file_h5.root.meta_data[:]
+
+            hit_data = self.dut.interpret_raw_data(raw_data, meta_data)
+            in_file_h5.createTable(in_file_h5.root, 'hit_data', hit_data, filters=self.filter_tables)
+
+        analysis.analyze_threshold_scan(h5_filename)
+        status_plot = plotting.plot_status(h5_filename)
+        occ_plot, H = plotting.plot_occupancy(h5_filename)
+        tot_plot,_ = plotting.plot_tot_dist(h5_filename)
+        lv1id_plot, _ = plotting.plot_lv1id_dist(h5_filename)
+        scan_pix_hist, _ = plotting.scan_pix_hist(h5_filename)
+        t_dac = plotting.t_dac_plot(h5_filename)
+
+        output_file(self.output_filename + '.html', title=self.run_name)
+        save(vplot(hplot(occ_plot, tot_plot, lv1id_plot), scan_pix_hist, t_dac, status_plot))
 
 
 
@@ -244,6 +243,7 @@ class ThresholdScan(ScanBase):
             if (len(self.inj_charge)-len(avg_tdc) > 0):
                 n = len(self.inj_charge)-len(avg_tdc)
                 self.inj_charge = self.inj_charge[n:]
+                self.pixel_list = self.pixel_list[n:]
 
             avg_tab = np.rec.fromarrays([self.inj_charge, self.pixel_list, avg_tdc, avg_tdc_err, avg_del, avg_del_err],
                                         dtype =[('charge', float), ('pixel_no', int), ('tot_ns', float),('err_tot_ns', float), ('delay_ns', float), ('err_delay_ns', float)])

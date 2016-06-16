@@ -5,7 +5,8 @@ from bokeh.plotting import figure
 from bokeh.models import LinearAxis, Range1d
 from bokeh.models import ColumnDataSource
 from bokeh.models.widgets import DataTable, DateFormatter, TableColumn
-
+import logging
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - [%(levelname)-8s] (%(threadName)-10s) %(message)s")
 
 import tables as tb
 import analysis as analysis
@@ -19,34 +20,42 @@ def plot_timewalk(h5_file_name):
             logging.info('tdc_data not present in file')
             return
         tot = tdc_data['tot_ns']
+        tot_err = tdc_data['err_tot_ns']
         delay = tdc_data['delay_ns']
+        delay_err = tdc_data['err_delay_ns']
         pixel_no = tdc_data['pixel_no']
-        pulse =  tdc_data['pulse_V']
+        pulse =  tdc_data['charge']
         pix, stop = np.unique(pixel_no, return_index=True)
-        print pix, stop
+        stop = np.sort(stop)
         TOOLS = "pan,wheel_zoom,box_zoom,reset,save,box_select"
         p1 = figure(title="Timewalk", tools=TOOLS)
-        p1.xaxis.axis_label="TOT (ns)"
+        p1.xaxis.axis_label="Charge (electrons)"
         p1.yaxis.axis_label="Delay (ns)"
-        if len(stop)==1:
-            p1.circle(tot[:], delay[:], legend="pixel "+str(pix[0]), size = 8)
-            p1.line(tot[:], delay[:], legend="pixel "+str(pix[0]))
-        if len(stop)>1:
-            for i in len(stop):
-                s1 = int(stop[i-1])
-                s2 = int(stop[i])
-                p1.circle(tot[s1:s2], delay[s1:s2], legend="pixel "+str(pix[i]), size = 8, color=Spectral11[i])
-                p1.line(tot[s1:s2], delay[s1:s2], legend="pixel "+str(pix[i]), color=Spectral11[i])
-
         p2 = figure(title="TOT linearity", tools=TOOLS)
-        p2.xaxis.axis_label="Pulse Height (V)"
+        p2.xaxis.axis_label="Charge (electrons)"
         p2.yaxis.axis_label="TOT (ns)"
-        p2.circle(pulse, tot, legend="tot", size = 8)
-        p2.line(pulse, tot, legend="tot")
 
+        stop = list(stop)
+        stop.append(len(tot))
+        for i in range(len(stop)-1):
+            s1 = int(stop[i])
+            s2 = int(stop[i+1])
+            p1.circle(pulse[s1:s2], delay[s1:s2], legend=str("pixel "+str(pix[i])), color=Spectral11[i-1], size=8)
+            p1.line(pulse[s1:s2], delay[s1:s2], legend=str("pixel "+str(pix[i])), color=Spectral11[i-1])
 
-        output_file("attempt.html", title="Timewalk.html")
-        return vplot((p1, p2))
+            err_x1 = [(pulse[s], pulse[s]) for s in range(s1,s2)]
+            err_y1 = [[float(delay[s]-delay_err[s]), float(delay[s]+delay_err[s])] for s in range(s1,s2)]
+            p1.multi_line(err_x1, err_y1, color=Spectral11[i-1], line_width=2)
+
+            p2.circle(pulse, tot[s1:s2], legend=str("pixel "+str(pix[i])), color=Spectral11[i-1], size = 8)
+            p2.line(pulse, tot[s1:s2], legend=str("pixel "+str(pix[i])),color=Spectral11[i-1])
+            err_x1 = [(pulse[s], pulse[s]) for s in range(s1,s2)]
+            err_y1 = [[float(tot[s]-tot_err[s]), float(tot[s]+tot_err[s])] for s in range(s1,s2)]
+            p2.multi_line(err_x1, err_y1, color=Spectral11[i-1], line_width=2)
+
+        #output_file("attempt.html", title="Timewalk.html")
+        #show(vplot(p1,p2))
+        return p1, p2
 
 
 def plot_status(h5_file_name):
@@ -266,4 +275,5 @@ def scan_pix_hist(h5_file_name, scurve_sel_pix = 200):
         return vplot(hplot(hm_th, plt_th_dist), hplot(hm_noise,plt_noise_dist), hplot(hm1, single_scan) ), s_hist
     
 if __name__ == "__main__":
+#    plot_timewalk('/home/carlo/fe65_p2/fe65p2/scans/output_data/20160616_161612_threshold_scan.h5')
     pass

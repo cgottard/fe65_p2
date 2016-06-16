@@ -6,6 +6,7 @@
 #
 
 import yaml
+import basil
 from basil.dut import Dut
 import logging
 logging.getLogger().setLevel(logging.DEBUG)
@@ -15,6 +16,8 @@ import time
 import bitarray
 
 from numba import jit, njit
+
+
 
 @njit
 def _interpret_raw_data(data, pix_data):

@@ -1,5 +1,6 @@
 
 import logging
+import basil
 from fe65p2 import fe65p2
 from fifo_readout import FifoReadout
 from contextlib import contextmanager
@@ -40,6 +41,9 @@ class ScanBase(object):
 
     def cap_fac(self):
          return 7.9891
+
+    def get_basil_dir(self):
+        return str(os.path.dirname(os.path.dirname(basil.__file__)))
 
     def start(self, **kwargs):
                 

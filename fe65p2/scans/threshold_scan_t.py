@@ -12,28 +12,34 @@ from basil.dut import Dut
 import logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - [%(levelname)-8s] (%(threadName)-10s) %(message)s")
 
+
+
+
+
+
 local_configuration = {
     "mask_steps": 1,
-    "repeat_command": 11,
-    "scan_range": [0.05, 1.0, 0.2],
+    "repeat_command": 101,
+    "scan_range": [0.05, 1.25, 0.05],
     "vthin1Dac": 55,
     "preCompVbnDac" : 115,
     "columns" : [True] * 2 + [True] * 14,
     "mask_filename": '',
-    "pix_list": [100]
+    "pix_list": [100,200,300,400,500]
 }
-
 
 
 class ThresholdScan(ScanBase):
     scan_id = "threshold_scan"
 
 
-
-
-
     def scan(self, pix_list=[200], mask_steps=4, repeat_command=101, columns = [True] * 16, scan_range = [0, 1.2, 0.1], vthin1Dac = 80, preCompVbnDac = 50, mask_filename='', **kwargs):
         '''Scan loop
+        This scan is to measure time walk. The charge injection can be driven by the GPAC or an external device.
+        In the latter case the device is Agilent 33250a connected through serial port.
+        The time walk and TOT are measured by a TDC module in the FPGA.
+        The output is an .h5 file (data) and an .html file with plots.
+
         Parameters
         ----------
         mask : int
@@ -243,10 +249,6 @@ class ThresholdScan(ScanBase):
         p1, p2 = plotting.plot_timewalk(h5_filename)
         output_file(self.output_filename + '.html', title=self.run_name)
         save(vplot(p1,p2))
-
-
-
-
 
 
     def analyze(self):

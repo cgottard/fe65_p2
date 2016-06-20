@@ -421,11 +421,14 @@ module fe65p2_mio (
         .TIMESTAMP(16'b0)
     );
     
+<<<<<<< HEAD
 	 
 	 assign LEMO_TX[1] = DUT_INJ;
 	 assign LEMO_TX[2] = 1'b0;	
 //	 assign TDC_FIFO_EMPTY = 1;
 	 
+=======
+>>>>>>> upstream/master
     wire USB_READ;
     assign USB_READ = FREAD & FSTROBE;
     

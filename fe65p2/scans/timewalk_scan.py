@@ -14,9 +14,6 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - [%(leve
 
 
 
-
-
-
 local_configuration = {
     "mask_steps": 1,
     "repeat_command": 101,
@@ -29,8 +26,8 @@ local_configuration = {
 }
 
 
-class ThresholdScan(ScanBase):
-    scan_id = "threshold_scan"
+class TimewalkScan(ScanBase):
+    scan_id = "timewalk_scan"
 
 
     def scan(self, pix_list=[200], mask_steps=4, repeat_command=101, columns = [True] * 16, scan_range = [0, 1.2, 0.1], vthin1Dac = 80, preCompVbnDac = 50, mask_filename='', **kwargs):
@@ -272,6 +269,6 @@ class ThresholdScan(ScanBase):
         save(vplot(hplot(occ_plot, tot_plot, lv1id_plot), scan_pix_hist, t_dac, status_plot))
 
 if __name__ == "__main__":
-     scan = ThresholdScan()
+     scan = TimewalkScan()
      scan.start(**local_configuration)
      scan.tdc_table()

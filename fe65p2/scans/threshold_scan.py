@@ -18,13 +18,8 @@ import os
 local_configuration = {
     "mask_steps": 4,
     "repeat_command": 100,
-<<<<<<< HEAD
-    "scan_range": [0.0, 0.2, 0.02],
-    "vthin1Dac": 80,
-=======
     "scan_range": [0.0, 0.4, 0.02],
     "vthin1Dac": 60,
->>>>>>> upstream/master
     "preCompVbnDac" : 115,
     "columns" : [True] * 2 + [True] * 14,
     "mask_filename": ''

@@ -16,13 +16,13 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - [%(leve
 
 local_configuration = {
     "mask_steps": 1,
-    "repeat_command": 101,
-    "scan_range": [0.05, 1.25, 0.05],
-    "vthin1Dac": 55,
-    "preCompVbnDac" : 115,
+    "repeat_command": 11,
+    "scan_range": [0.01, 0.5, 0.02],
+    "vthin1Dac": 60,
+    "preCompVbnDac" : 50,
     "columns" : [True] * 2 + [True] * 14,
     "mask_filename": '',
-    "pix_list": [100,200,300,400,500]
+    "pix_list": [500]
 }
 
 
@@ -44,18 +44,20 @@ class TimewalkScan(ScanBase):
         repeat : int
             Number of injections.
         '''
-
+        inj_factor = 1.0
         INJ_LO = 0.0
         try:
             dut = Dut(ScanBase.get_basil_dir(self)+'/examples/lab_devices/agilent33250a_pyserial.yaml')
             dut.init()
             logging.info('Connected to '+str(dut['Pulser'].get_info()))
         except RuntimeError:
+            INJ_LO = 0.2
+            inj_factor = 2.0
             logging.info('External injector not connected. Switch to internal one')
             self.dut['INJ_LO'].set_voltage(INJ_LO, unit='V')
 
         self.dut['global_conf']['PrmpVbpDac'] = 80
-        self.dut['global_conf']['vthin1Dac'] = 255
+#        self.dut['global_conf']['vthin1Dac'] = 255
         self.dut['global_conf']['vthin2Dac'] = 0
         self.dut['global_conf']['vffDac'] = 24
         self.dut['global_conf']['PrmpVbnFolDac'] = 51
@@ -135,7 +137,7 @@ class TimewalkScan(ScanBase):
         self.dut['tdc']['EN_INVERT_TDC'] = False
         self.dut['tdc']['EN_WRITE_TIMESTAMP'] = True
 
-        scan_range = np.arange(scan_range[0], scan_range[1], scan_range[2])
+        scan_range = np.arange(scan_range[0], scan_range[1], scan_range[2]) / inj_factor
         self.pixel_list = pix_list
         p_counter = 0
         lmask = [0]*(64*64)

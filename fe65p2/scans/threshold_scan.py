@@ -13,6 +13,7 @@ import bitarray
 import tables as tb
 from bokeh.charts import output_file, show, vplot, hplot, save
 from progressbar import ProgressBar
+from basil.dut import Dut
 import os
 
 local_configuration = {
@@ -37,9 +38,17 @@ class ThresholdScan(ScanBase):
         repeat : int
             Number of injections.
         '''
-        
-        INJ_LO = 0.2
-        self.dut['INJ_LO'].set_voltage(INJ_LO, unit='V')
+        inj_factor = 1.0
+        INJ_LO = 0.0
+        try:
+            dut = Dut(ScanBase.get_basil_dir(self)+'/examples/lab_devices/agilent33250a_pyserial.yaml')
+            dut.init()
+            logging.info('Connected to '+str(dut['Pulser'].get_info()))
+        except RuntimeError:
+            INJ_LO = 0.2
+            inj_factor = 2.0
+            logging.info('External injector not connected. Switch to internal one')
+            self.dut['INJ_LO'].set_voltage(INJ_LO, unit='V')
         
         self.dut['global_conf']['PrmpVbpDac'] = 80
         self.dut['global_conf']['vthin1Dac'] = 255
@@ -119,9 +128,10 @@ class ThresholdScan(ScanBase):
         lmask = lmask * ( (64 * 64) / mask_steps  + 1 )
         lmask = lmask[:64*64]
 
-        scan_range = np.arange(scan_range[0], scan_range[1], scan_range[2]) / 2 # This depends on GPAC setting
+        scan_range = np.arange(scan_range[0], scan_range[1], scan_range[2]) / inj_factor
         
         for idx, k in enumerate(scan_range):
+            dut['Pulser'].set_voltage(INJ_LO, float(INJ_LO + k), unit='V')
             self.dut['INJ_HI'].set_voltage( float(INJ_LO + k), unit='V')
             time.sleep(0.5)
             

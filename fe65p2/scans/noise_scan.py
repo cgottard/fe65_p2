@@ -17,7 +17,7 @@ local_configuration = {
     "stop_pixel_count": 4,
     "vthin2Dac" : 0,
     "vthin1Dac" : 130,
-    "columns": [True] * 2 + [False] * 14,
+    "columns": [True] * 16 #+ [False] * 14,
     "preCompVbnDac": 115
 }
 

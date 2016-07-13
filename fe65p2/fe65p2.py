@@ -296,7 +296,6 @@ class fe65p2(Dut):
 
     def power_down(self):
 
-        self['VDDA'].set_current_limit(200, unit='mA')
         self['VDDA'].set_enable(False)
 
         self['VDDD'].set_enable(False)

@@ -23,7 +23,7 @@ local_configuration = {
     "preCompVbnDac" : 50,
     "PrmpVbpDac" : 20,
     "columns" : [True] * 2 + [True] * 14,
-    "mask_filename" : '/media/mark/1TB/Scanresults/output_data/chip2/external/20160625_231548_noise_scan_PrmpVbpDac_00_timewalks/160625_231548_noise_scan_PrmpVbpDac_00_020_threshold.h5',
+    "mask_filename" : '',
     "pix_list" : [(6, 20),]
 }
 
@@ -321,13 +321,6 @@ class TimewalkScan(ScanBase):
                 expfit2=np.append(expfit2,expfit[2])
                 expfit3=np.append(expfit3,expfit[3])
                 pixels=np.append(pixels,pxl_list[s1])
-            #print len(injections), len(pxl_list), len(hits), len(avg_tdc), len(avg_tdc_err), len(avg_del), len(avg_del_err)
-            #print "injections: ", injections ," pxl_list: ", pxl_list , " hits: ", hits ," avg_tdc: ", avg_tdc ," avg_tdc_err: ", avg_tdc_err , " avg_del: ", avg_del , " avg_del_err: ", avg_del_err
-            #avg_tab = np.rec.fromarrays([injections, pxl_list, hits, avg_tdc, avg_tdc_err, avg_del, avg_del_err],
-            #                                dtype=[('charge', float), ('pixel_no', int), ('hits', int),
-            #                                       ('tot_ns', float), ('err_tot_ns', float), ('delay_ns', float),
-            #                                      ('err_delay_ns', float)])
-            #in_file_h5.createTable(in_file_h5.root, 'tdc_data', avg_tab, filters=self.filter_tables)
             thresh=np.rec.fromarrays([pixels,thresholds,expfit0,expfit1,expfit2,expfit3],dtype=[('pixel_no', int),('td_threshold', float),
                                     ('expfit0', float), ('expfit1', float), ('expfit2', float), ('expfit3', float)])
             in_file_h5.createTable(in_file_h5.root, 'td_threshold', thresh, filters=self.filter_tables)

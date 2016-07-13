@@ -179,7 +179,7 @@ class ThresholdScan(ScanBase):
         scan_results = self.h5_file.create_group("/", 'scan_results', 'Scan Masks')
         self.h5_file.createCArray(scan_results, 'tdac_mask', obj=mask_tdac)
         self.h5_file.createCArray(scan_results, 'en_mask', obj=mask_en)
-        self.dut.power_down()
+
 
 
         

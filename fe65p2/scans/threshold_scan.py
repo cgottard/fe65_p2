@@ -19,17 +19,18 @@ import os
 local_configuration = {
     "mask_steps": 4,
     "repeat_command": 100,
-    "scan_range": [0.0, 0.4, 0.02],
-    "vthin1Dac": 60,
-    "preCompVbnDac" : 115,
+    "scan_range": [0.0, 0.2, 0.005],
+    "vthin1Dac": 22,
+    "PrmpVbpDac": 36,
+    "preCompVbnDac" : 50,
     "columns" : [True] * 2 + [True] * 14,
-    "mask_filename": ''
+    "mask_filename": '/media/mark/1TB/Scanresults/output_data/chip2/Noisescans/test/20160625_231548_noise_scan_PrmpVbpDac_01/160625_231548_noise_scan_PrmpVbpDac_01_036.h5'
 }
 
 class ThresholdScan(ScanBase):
     scan_id = "threshold_scan"
 
-    def scan(self, mask_steps=4, repeat_command=100, PrmpVbpDac=80, vthin2Dac=0, columns = [True] * 16, scan_range = [0, 1.2, 0.1], vthin1Dac = 80, preCompVbnDac = 50, mask_filename='', **kwargs):
+    def scan(self, mask_steps=4, repeat_command=100, PrmpVbpDac=80, vthin2Dac=0, columns = [True] * 16, scan_range = [0, 0.2, 0.005], vthin1Dac = 80, preCompVbnDac = 50, mask_filename='', **kwargs):
         '''Scan loop
         Parameters
         ----------
@@ -107,14 +108,14 @@ class ThresholdScan(ScanBase):
             with tb.open_file(mask_filename, 'r') as in_file_h5:
                 mask_tdac = in_file_h5.root.scan_results.tdac_mask[:]
                 mask_en = in_file_h5.root.scan_results.en_mask[:]
-        
+
         self.dut.write_en_mask(mask_en)
         self.dut.write_tune_mask(mask_tdac)
         
         self.dut['global_conf']['OneSr'] = 0
         self.dut.write_global()
 
-        self.dut['inj'].set_delay(100000) #this seems to be working OK problem is probably bad injection on GPAC
+        self.dut['inj'].set_delay(10000) #this seems to be working OK problem is probably bad injection on GPAC usually +0
         self.dut['inj'].set_width(1000)
         self.dut['inj'].set_repeat(repeat_command)
         self.dut['inj'].set_en(False)
@@ -175,9 +176,12 @@ class ThresholdScan(ScanBase):
                     while not self.dut['trigger'].is_done():
                         pass
                     
-        scan_results = self.h5_file.create_group("/", 'scan_masks', 'Scan Masks')
+        scan_results = self.h5_file.create_group("/", 'scan_results', 'Scan Masks')
         self.h5_file.createCArray(scan_results, 'tdac_mask', obj=mask_tdac)
         self.h5_file.createCArray(scan_results, 'en_mask', obj=mask_en)
+        self.dut.power_down()
+
+
         
         
     def analyze(self):

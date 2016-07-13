@@ -217,10 +217,17 @@ class fe65p2(Dut):
             self['control'].write()
     
     def write_en_mask(self, mask):
-            self.write_pixel(mask)
-            self['global_conf']['PixConfLd'] = 0b11
-            self.write_global()
-            self['global_conf']['PixConfLd'] = 0b00
+        self.write_pixel(mask)
+        self['global_conf']['PixConfLd'] = 0b11
+        self.write_global()
+        self['global_conf']['PixConfLd'] = 0b00
+
+    def write_inj_mask(self, mask):
+        self.write_pixel(mask)
+        self['global_conf']['InjEnLd'] = 0b1
+        self.write_global()
+        self['global_conf']['InjEnLd'] = 0b0
+
         
     def write_tune_mask(self, mask):
             # 0  -> Sign = 1, TDac = 15 1111(lowest) 
@@ -278,14 +285,24 @@ class fe65p2(Dut):
     def power_up(self):
     
         self['VDDA'].set_current_limit(200, unit='mA')
-        self['VDDA'].set_voltage(1.2, unit='V')
+        self['VDDA'].set_voltage(1.2, unit='V')#1.2
         self['VDDA'].set_enable(True)
         
-        self['VDDD'].set_voltage(1.2, unit='V')
+        self['VDDD'].set_voltage(1.2, unit='V')#1.2
         self['VDDD'].set_enable(True)
         
-        self['VAUX'].set_voltage(1.2, unit='V')
+        self['VAUX'].set_voltage(1.2, unit='V')#1.2
         self['VAUX'].set_enable(True)
+
+    def power_down(self):
+
+        self['VDDA'].set_current_limit(200, unit='mA')
+        self['VDDA'].set_enable(False)
+
+        self['VDDD'].set_enable(False)
+
+        self['VAUX'].set_enable(False)
+
 
     def power_status(self):
         staus = {}

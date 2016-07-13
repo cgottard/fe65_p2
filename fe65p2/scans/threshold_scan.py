@@ -24,7 +24,7 @@ local_configuration = {
     "PrmpVbpDac": 36,
     "preCompVbnDac" : 50,
     "columns" : [True] * 2 + [True] * 14,
-    "mask_filename": '/media/mark/1TB/Scanresults/output_data/chip2/Noisescans/test/20160625_231548_noise_scan_PrmpVbpDac_01/160625_231548_noise_scan_PrmpVbpDac_01_036.h5'
+    "mask_filename": ''
 }
 
 class ThresholdScan(ScanBase):

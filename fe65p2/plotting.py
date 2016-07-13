@@ -77,8 +77,6 @@ def plot_timewalk(h5_file_name):
             err_x1 = [(pulse[s], pulse[s]) for s in range(s1,s2)]
             err_y1 = [[float(tot[s]-tot_err[s]), float(tot[s]+tot_err[s])] for s in range(s1,s2)]
             p2.multi_line(err_x1, err_y1, color=Spectral11[i-1], line_width=2)
-        #output_file("attempt.html", title="Timewalk.html")
-        #show(vplot(hplot(p1,single_scan),p2,))
         return p1, p2, single_scan
 
 
@@ -299,5 +297,4 @@ def scan_pix_hist(h5_file_name, scurve_sel_pix = 200):
         return vplot(hplot(hm_th, plt_th_dist), hplot(hm_noise,plt_noise_dist), hplot(hm1, single_scan) ), s_hist
     
 if __name__ == "__main__":
-    plot_timewalk('/media/mark/1TB/Scanresults/output_data/chip2/external/20160625_231548_noise_scan_PrmpVbpDac_00_timewalks/160625_231548_noise_scan_PrmpVbpDac_00_020_threshold_timewalk.h5')
     pass

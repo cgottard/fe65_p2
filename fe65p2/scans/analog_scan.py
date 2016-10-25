@@ -15,7 +15,17 @@ import os
 
 local_configuration = {
     "mask_steps": 4*64,
-    "repeat_command": 100
+    "repeat_command": 100,
+
+    #DAC parameters
+    "PrmpVbpDac": 36,
+    "vthin1Dac": 255,
+    "vthin2Dac": 0,
+    "vffDac" : 24,
+    "PrmpVbnFolDac" : 51,
+    "vbnLccDac" : 1,
+    "compVbnDac":25,
+    "preCompVbnDac" : 50
 }
 
 class AnalogScan(ScanBase):
@@ -40,14 +50,14 @@ class AnalogScan(ScanBase):
         self.dut['INJ_LO'].set_voltage(0.6, unit='V')
         self.dut['INJ_HI'].set_voltage(1.2, unit='V')
         
-        self.dut['global_conf']['PrmpVbpDac'] = 80
-        self.dut['global_conf']['vthin1Dac'] = 255
-        self.dut['global_conf']['vthin2Dac'] = 0
-        self.dut['global_conf']['vffDac'] = 30
-        self.dut['global_conf']['PrmpVbnFolDac'] = 51
-        self.dut['global_conf']['vbnLccDac'] = 1
-        self.dut['global_conf']['compVbnDac'] = 25
-        self.dut['global_conf']['preCompVbnDac'] = 50
+        self.dut['global_conf']['PrmpVbpDac'] = kwargs['PrmpVbpDac']
+        self.dut['global_conf']['vthin1Dac'] = kwargs['vthin1Dac']
+        self.dut['global_conf']['vthin2Dac'] = kwargs['vthin2Dac']
+        self.dut['global_conf']['vffDac'] = kwargs['vffDac']
+        self.dut['global_conf']['PrmpVbnFolDac'] = kwargs['PrmpVbnFolDac']
+        self.dut['global_conf']['vbnLccDac'] = kwargs['vbnLccDac']
+        self.dut['global_conf']['compVbnDac'] = kwargs['compVbnDac']
+        self.dut['global_conf']['preCompVbnDac'] = kwargs['preCompVbnDac']
         
         self.dut.write_global() 
 

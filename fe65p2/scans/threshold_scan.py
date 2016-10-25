@@ -4,7 +4,7 @@ import fe65p2.plotting as  plotting
 import time
 import fe65p2.analysis as analysis
 
-
+import yaml
 import logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - [%(levelname)-8s] (%(threadName)-10s) %(message)s")
 
@@ -17,14 +17,22 @@ from basil.dut import Dut
 import os
 
 local_configuration = {
+    "columns" : [True] * 2 + [False] * 14,
+
+    #DAC parameters
+    "PrmpVbpDac": 36,
+    "vthin1Dac": 255,
+    "vthin2Dac": 0,
+    "vffDac" : 24,
+    "PrmpVbnFolDac" : 51,
+    "vbnLccDac" : 1,
+    "compVbnDac":25,
+    "preCompVbnDac" : 50,
+
+    #thrs scan
     "mask_steps": 4,
     "repeat_command": 100,
     "scan_range": [0.0, 0.6, 0.01],
-    "vthin1Dac": 100,
-    "vthin2Dac": 0,
-    "PrmpVbpDac": 80,
-    "preCompVbnDac" : 110,
-    "columns" : [True] * 2 + [False] * 14,
     "mask_filename": '',
     "TDAC" : 16
 }
@@ -33,7 +41,7 @@ class ThresholdScan(ScanBase):
     scan_id = "threshold_scan"
 
 
-    def scan(self, mask_steps=4, TDAC=16, repeat_command=100, PrmpVbpDac=80, vthin2Dac=0, columns = [True] * 16, scan_range = [0, 0.2, 0.005], vthin1Dac = 80, preCompVbnDac = 50, mask_filename='', **kwargs):
+    def scan(self, mask_steps=4, TDAC=16, scan_range=[0.0, 0.6, 0.01], repeat_command=100, mask_filename='', **kwargs):
 
         '''Scan loop
         Parameters
@@ -43,6 +51,16 @@ class ThresholdScan(ScanBase):
         repeat : int
             Number of injections.
         '''
+        def laod_vthin1Dac(mask):
+            if os._exists(mask):
+                in_file_h5 = tb.open_file(mask, 'r')
+                dac_status = yaml.load(in_file_h5.root.meta_data.attrs.dac_status)
+                vthrs1 = dac_status['vthin1Dac'] + 3
+                return vthrs1
+            else: return kwargs['vthin1Dac']
+
+        vth1 = laod_vthin1Dac(mask_filename)
+
         inj_factor = 1.0
         INJ_LO = 0.0
         try:
@@ -55,14 +73,14 @@ class ThresholdScan(ScanBase):
             logging.info('External injector not connected. Switch to internal one')
             self.dut['INJ_LO'].set_voltage(INJ_LO, unit='V')
 
-        self.dut['global_conf']['PrmpVbpDac'] = 80
-        self.dut['global_conf']['vthin1Dac'] = 255
-        self.dut['global_conf']['vthin2Dac'] = 0
-        self.dut['global_conf']['vffDac'] = 24
-        self.dut['global_conf']['PrmpVbnFolDac'] = 51
-        self.dut['global_conf']['vbnLccDac'] = 1
-        self.dut['global_conf']['compVbnDac'] = 25
-        self.dut['global_conf']['preCompVbnDac'] = 50
+        self.dut['global_conf']['PrmpVbpDac'] = kwargs['PrmpVbpDac']
+        self.dut['global_conf']['vthin1Dac'] = vth1
+        self.dut['global_conf']['vthin2Dac'] = kwargs['vthin2Dac']
+        self.dut['global_conf']['vffDac'] = kwargs['vffDac']
+        self.dut['global_conf']['PrmpVbnFolDac'] = kwargs['PrmpVbnFolDac']
+        self.dut['global_conf']['vbnLccDac'] = kwargs['vbnLccDac']
+        self.dut['global_conf']['compVbnDac'] = kwargs['compVbnDac']
+        self.dut['global_conf']['preCompVbnDac'] = kwargs['preCompVbnDac']
 
         self.dut.write_global()
         self.dut['control']['RESET'] = 0b01
@@ -102,7 +120,7 @@ class ThresholdScan(ScanBase):
         mask_en = np.full([64,64], False, dtype = np.bool)
         mask_tdac = np.full([64,64], TDAC, dtype = np.uint8)
 
-        for inx, col in enumerate(columns):
+        for inx, col in enumerate(kwargs['columns']):
            if col:
                 mask_en[inx*4:(inx+1)*4,:]  = True
 
@@ -163,10 +181,10 @@ class ThresholdScan(ScanBase):
                     bv_mask[1:] = bv_mask[0:-1]
                     bv_mask[0] = 0
 
-                    self.dut['global_conf']['vthin1Dac'] = vthin1Dac
-                    self.dut['global_conf']['preCompVbnDac'] = preCompVbnDac
-                    self.dut['global_conf']['vthin2Dac'] = vthin2Dac
-                    self.dut['global_conf']['PrmpVbpDac'] = PrmpVbpDac
+                    self.dut['global_conf']['vthin1Dac'] = vth1
+                    self.dut['global_conf']['preCompVbnDac'] = kwargs['preCompVbnDac']
+                    self.dut['global_conf']['vthin2Dac'] = kwargs['vthin2Dac']
+                    self.dut['global_conf']['PrmpVbpDac'] = kwargs['PrmpVbpDac']
                     self.dut.write_global()
                     time.sleep(0.1)
 

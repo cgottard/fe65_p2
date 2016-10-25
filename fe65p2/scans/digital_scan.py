@@ -15,7 +15,17 @@ import os
 
 local_configuration = {
     "mask_steps": 4,
-    "repeat_command": 100
+    "repeat_command": 100,
+
+    #DAC parameters
+    "PrmpVbpDac": 36,
+    "vthin1Dac": 255,
+    "vthin2Dac": 0,
+    "vffDac" : 24,
+    "PrmpVbnFolDac" : 51,
+    "vbnLccDac" : 1,
+    "compVbnDac":25,
+    "preCompVbnDac" : 50
 }
 
 class DigitalScan(ScanBase):
@@ -31,6 +41,15 @@ class DigitalScan(ScanBase):
         repeat : int
             Number of injections.
         '''
+
+        self.dut['global_conf']['PrmpVbpDac'] = kwargs['PrmpVbpDac']
+        self.dut['global_conf']['vthin1Dac'] = kwargs['vthin1Dac']
+        self.dut['global_conf']['vthin2Dac'] = kwargs['vthin2Dac']
+        self.dut['global_conf']['vffDac'] = kwargs['vffDac']
+        self.dut['global_conf']['PrmpVbnFolDac'] = kwargs['PrmpVbnFolDac']
+        self.dut['global_conf']['vbnLccDac'] = kwargs['vbnLccDac']
+        self.dut['global_conf']['compVbnDac'] = kwargs['compVbnDac']
+        self.dut['global_conf']['preCompVbnDac'] = kwargs['preCompVbnDac']
         
         #write InjEnLd & PixConfLd to '1
         self.dut['pixel_conf'].setall(True)

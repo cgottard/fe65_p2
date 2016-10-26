@@ -105,6 +105,10 @@ class ScanBase(object):
         self.meta_data_table.attrs.power_status = yaml.dump(self.dut.power_status())
         self.meta_data_table.attrs.dac_status = yaml.dump(self.dut.dac_status())
 
+        #temperature
+        temp = str(self.dut['ntc'].get_temperature('C'))
+        self.meta_data_table.attrs.temp = yaml.dump(temp)
+
         self.h5_file.close()
         logging.info('Data Output Filename: %s', self.output_filename + '.h5')
 

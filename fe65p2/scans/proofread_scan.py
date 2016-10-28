@@ -1,5 +1,7 @@
 from fe65p2.scan_base import ScanBase
 import time
+import os
+import sys
 import bitarray
 import logging
 import numpy as np
@@ -52,10 +54,14 @@ class proofread_scan(ScanBase):
         self.dut['global_conf']['compVbnDac'] = kwargs['compVbnDac']
         self.dut['global_conf']['preCompVbnDac'] = kwargs['preCompVbnDac']
 
-        path = "/home/carlo/fe65_p2/firmware/ise/proofr_scan_bits/"
-        self.bitfiles = ["fe65p2_mio_1MHz.bit", "fe65p2_mio_2MHz.bit", "fe65p2_mio_5MHz.bit", "fe65p2_mio_10MHz.bit",
-                         "fe65p2_mio_20MHz.bit", "fe65p2_mio_40MHz.bit"]
-        self.voltages = [2.0, 1.8, 1.6, 1.4, 1.2, 1.0, 0.9, 0.85]
+        scan_path = os.path.dirname(os.path.realpath(sys.argv[0]))
+        path = scan_path.replace('fe65p2/scans','firmware/bits/SPI_bits/')
+#        self.bitfiles = ["fe65p2_mio_1MHz.bit", "fe65p2_mio_2MHz.bit", "fe65p2_mio_5MHz.bit", "fe65p2_mio_10MHz.bit",
+#                         "fe65p2_mio_20MHz.bit", "fe65p2_mio_40MHz.bit"]
+        self.bitfiles = ["fe65p2_mio_3MHz.bit", "fe65p2_mio_4MHz.bit", "fe65p2_mio_6MHz.bit",
+                         "fe65p2_mio_8MHz.bit", "fe65p2_mio_12MHz.bit", "fe65p2_mio_16MHz.bit",
+                         "fe65p2_mio_24MHz.bit", "fe65p2_mio_32MHz.bit"]
+        self.voltages = [1.4, 1.3, 1.2, 1.15, 1.1, 1.0, 0.95, 0.90]
 
         self.shmoo_errors = []
         self.shmoo_global_errors = []
@@ -158,64 +164,68 @@ class proofread_scan(ScanBase):
                             len(errors[i])))  # , " at ", ' '.join([str(x) for x in errors[i]])
 
 
-def shmoo_plotting(self):
-    ''' pixel register shmoo plot '''
-    shmoopdf = PdfPages('shmoo.pdf')
-    shmoonp = np.array(self.shmoo_errors)
-    data = shmoonp.reshape(len(self.voltages), -1, order='F')
-    fig, ax = plt.subplots()
-    plt.title('Pixel registers errors')
-    ax.set_axis_off()
-    tb = Table(ax, bbox=[0, 0, 1, 1])
-    ncols = len(self.bitfiles)
-    nrows = len(self.voltages)
-    width, height = 1.0 / ncols, 1.0 / nrows
-    # Add cells
-    for (i, j), val in np.ndenumerate(data):
-        color = ''
-        if val == 0: color = 'green'
-        if (val > 0 & val < 10): color = 'yellow'
-        if val > 10: color = 'red'
-        tb.add_cell(i, j, width, height, text=str(val),
-                    loc='center', facecolor=color)
-    # Row Labels...
-    for i in range(len(self.voltages)):
-        tb.add_cell(i, -1, width, height, text=str(self.voltages[i]) + 'V', loc='right',
-                    edgecolor='none', facecolor='none')
-    # Column Labels...
-    for j in range(len(self.bitfiles)):
-        freq_label = self.bitfiles[j][-9:-7].translate(None, '_')
-        tb.add_cell(nrows + 1, j, width, height / 2, text=freq_label + ' MHz', loc='center',
-                    edgecolor='none', facecolor='none')
-    ax.add_table(tb)
-    shmoopdf.savefig()
+    def shmoo_plotting(self):
+        ''' pixel register shmoo plot '''
+        shmoopdf = PdfPages('shmoo.pdf')
+        shmoonp = np.array(self.shmoo_errors)
+        data = shmoonp.reshape(len(self.voltages), -1, order='F')
+        fig, ax = plt.subplots()
+        plt.title('Pixel registers errors')
+        ax.set_axis_off()
+        fig.text(0.70, 0.05, 'SPI clock (MHz)', fontsize=14)
+        fig.text(0.02, 0.90, 'Supply voltage (V)', fontsize=14, rotation=90)
+        tb = Table(ax, bbox=[0.01,0.01,0.99,0.99])
+        ncols = len(self.bitfiles)
+        nrows = len(self.voltages)
+        width, height = 1.0 / ncols, 1.0 / nrows
+        # Add cells
+        for (i, j), val in np.ndenumerate(data):
+            color = ''
+            if val == 0: color = 'green'
+            if (val > 0 & val < 10): color = 'yellow'
+            if val > 10: color = 'red'
+            tb.add_cell(i, j, width, height, text=str(val),
+                        loc='center', facecolor=color)
+        # Row Labels...
+        for i in range(len(self.voltages)):
+            tb.add_cell(i, -1, width, height, text=str(self.voltages[i]) + 'V', loc='right',
+                        edgecolor='none', facecolor='none')
+        # Column Labels...
+        for j in range(len(self.bitfiles)):
+            freq_label = self.bitfiles[j].replace('fe65p2_mio_', '').replace('MHz.bit','')
+            tb.add_cell(nrows + 1, j, width, height / 2, text=freq_label + ' MHz', loc='center',
+                        edgecolor='none', facecolor='none')
+        ax.add_table(tb)
+        shmoopdf.savefig()
 
-    ''' global register shmoo plot '''
-    shmoo_glob_np = np.array(self.shmoo_global_errors)
-    data_g = shmoo_glob_np.reshape(len(self.voltages), -1, order='F')
-    fig_g, ax_g = plt.subplots()
-    ax_g.set_axis_off()
-    tb_g = Table(ax_g, bbox=[0, 0, 1, 1])
-    plt.title('Global registers errors')
-    # Add cells
-    for (i, j), val_g in np.ndenumerate(data_g):
-        color = ''
-        if val_g == 0: color = 'green'
-        if val_g > 0: color = 'red'
-        tb_g.add_cell(i, j, width, height, text=str(val_g),
-                      loc='center', facecolor=color)
-    # Row Labels...
-    for i in range(len(self.voltages)):
-        tb_g.add_cell(i, -1, width, height, text=str(self.voltages[i]) + 'V', loc='right',
-                      edgecolor='none', facecolor='none')
-    # Column Labels...
-    for j in range(len(self.bitfiles)):
-        freq_label = self.bitfiles[j][-9:-7].translate(None, '_')
-        tb_g.add_cell(nrows + 1, j, width, height / 2, text=freq_label + ' MHz', loc='center',
-                      edgecolor='none', facecolor='none')
-    ax_g.add_table(tb_g)
-    shmoopdf.savefig()
-    shmoopdf.close()
+        ''' global register shmoo plot '''
+        shmoo_glob_np = np.array(self.shmoo_global_errors)
+        data_g = shmoo_glob_np.reshape(len(self.voltages), -1, order='F')
+        fig_g, ax_g = plt.subplots()
+        ax_g.set_axis_off()
+        fig_g.text(0.70, 0.05, 'SPI clock (MHz)', fontsize=14)
+        fig_g.text(0.02, 0.90, 'Supply voltage (V)', fontsize=14, rotation=90)
+        tb_g = Table(ax_g, bbox=[0.01,0.01,0.99,0.99])
+        plt.title('Global registers errors')
+        # Add cells
+        for (i, j), val_g in np.ndenumerate(data_g):
+            color = ''
+            if val_g == 0: color = 'green'
+            if val_g > 0: color = 'red'
+            tb_g.add_cell(i, j, width, height, text=str(val_g),
+                          loc='center', facecolor=color)
+        # Row Labels...
+        for i in range(len(self.voltages)):
+            tb_g.add_cell(i, -1, width, height, text=str(self.voltages[i]) + 'V', loc='right',
+                          edgecolor='none', facecolor='none')
+        # Column Labels...
+        for j in range(len(self.bitfiles)):
+            freq_label = self.bitfiles[j].replace('fe65p2_mio_', '').replace('MHz.bit','')
+            tb_g.add_cell(nrows + 1, j, width, height / 2, text=freq_label + ' MHz', loc='center',
+                          edgecolor='none', facecolor='none')
+        ax_g.add_table(tb_g)
+        shmoopdf.savefig()
+        shmoopdf.close()
 
 
 if __name__ == "__main__":

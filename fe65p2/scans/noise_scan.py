@@ -17,6 +17,7 @@ import os
 local_configuration = {
     "columns": [True]*2 +[False]*14,
     "stop_pixel_count": 4,
+    "repeats" : 100000,
     #pars
     "PrmpVbpDac": 36,
     "vthin1Dac": 255,
@@ -26,13 +27,14 @@ local_configuration = {
     "vbnLccDac" : 1,
     "compVbnDac":25,
     "preCompVbnDac" : 50,
+
 }
 
 
 class NoiseScan(ScanBase):
     scan_id = "noise_scan"
 
-    def scan(self, columns=[True] * 16, stop_pixel_count=4, **kwargs):
+    def scan(self, columns=[True] * 16, stop_pixel_count=4, repeats=100000, **kwargs):
         '''Scan loop
         Parameters
         ----------
@@ -102,7 +104,7 @@ class NoiseScan(ScanBase):
         mask_en = np.zeros([64, 64], dtype=np.bool)
         mask_tdac = np.ones([64, 64], dtype=np.uint8)
 
-        for inx, col in enumerate(kwargs['columns']):
+        for inx, col in enumerate(columns):
             if col:
                 mask_en[inx * 4:(inx + 1) * 4, :] = True
 
@@ -122,7 +124,7 @@ class NoiseScan(ScanBase):
 
         self.dut['trigger'].set_delay(100)  # this seems to be working OK problem is probably bad injection on GPAC
         self.dut['trigger'].set_width(1)  # try single
-        self.dut['trigger'].set_repeat(100000)
+        self.dut['trigger'].set_repeat(repeats)
         self.dut['trigger'].set_en(False)
 
         np.set_printoptions(linewidth=150)
@@ -139,7 +141,6 @@ class NoiseScan(ScanBase):
 
         while not finished:
             with self.readout(scan_param_id=vth1Dac, fill_buffer=True, clear_buffer=True):
-                vth1Dac = kwargs['vthin1Dac']
                 self.dut['global_conf']['vthin1Dac'] = vth1Dac
                 self.dut['global_conf']['vthin2Dac'] =  kwargs['vthin2Dac']
                 self.dut['global_conf']['preCompVbnDac'] = kwargs['preCompVbnDac']
@@ -196,7 +197,7 @@ class NoiseScan(ScanBase):
 
                 logging.debug('col=%d row=%d val=%d mask=%d', i / 64, i % 64, value[i], mask_tdac[col, row])
 
-            if vth1Dac < 1 or mask_disable_count >= kwargs['stop_pixel_count']:
+            if vth1Dac < 1 or mask_disable_count >= stop_pixel_count:
                 finished = True
 
             if not corrected:
@@ -208,11 +209,10 @@ class NoiseScan(ScanBase):
             self.dut.write_tune_mask(mask_tdac)
 
             iteration += 1
-
         self.dut['global_conf']['vthin1Dac'] = vth1Dac
         self.dut['global_conf']['vthin2Dac'] = kwargs['vthin2Dac']
         self.dut['global_conf']['preCompVbnDac'] = kwargs['preCompVbnDac']
-        self.dut['global_conf']['PrmpVbpDac'] = kwargs['[PrmpVbpDac']
+        self.dut['global_conf']['PrmpVbpDac'] = kwargs['PrmpVbpDac']
 
         scan_results = self.h5_file.create_group("/", 'scan_results', 'Scan Results')
         self.h5_file.createCArray(scan_results, 'tdac_mask', obj=mask_tdac)

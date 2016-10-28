@@ -2,7 +2,6 @@
 from fe65p2.scan_base import ScanBase
 import fe65p2.plotting as  plotting
 import time
-
 import logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - [%(levelname)-8s] (%(threadName)-10s) %(message)s")
 

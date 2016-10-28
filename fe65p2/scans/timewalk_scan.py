@@ -10,21 +10,27 @@ import yaml
 from basil.dut import Dut
 import logging
 import math
+import itertools
 
 logging.basicConfig(level=logging.INFO,
                     format="%(asctime)s - %(name)s - [%(levelname)-8s] (%(threadName)-10s) %(message)s")
 
+row = range(1,65,1)
+all_pixels = []
+for (r,c) in itertools.product(row,row):
+    all_pixels.append((r,c))
+
+
 local_configuration = {
-    "mask_steps": 1,
+    "mask_steps": 4,
     "repeat_command": 101,
-    "scan_range": [0.01, 0.2, 0.01],
-    "vthin1Dac": 29,
-    "preCompVbnDac": 50,
-    "PrmpVbpDac": 20,
-    "columns": [True] * 2 + [True] * 14,
+    "scan_range": [0., 0.5, 0.05],
+    "vthin1Dac": 80,
+    "preCompVbnDac": 36,
+    "PrmpVbpDac": 50,
+    "columns": [True] * 2 + [False] * 14,
     "mask_filename": '',
-    "pix_list": [(6, 20), ],
-    "mask_filename": '',
+    "pix_list": [(0,0) ],
 }
 
 
@@ -337,4 +343,4 @@ if __name__ == "__main__":
     Timescan = TimewalkScan()
     Timescan.start(**local_configuration)
     scanrange = local_configuration['scan_range']
-    Timescan.tdc_table(((scanrange[1] - scanrange[0]) / scanrange[2]) + 3)
+    Timescan.tdc_table(len(np.arange(scanrange[0], scanrange[1], scanrange[2]))+3)

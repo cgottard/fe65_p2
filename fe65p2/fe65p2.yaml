@@ -69,6 +69,13 @@ hw_drivers:
     base_addr : 0x18000
     base_data_addr: 0x1000000000000
 
+  - name        : ntc
+    type        : NTCRegister
+    hw_driver   : GPAC
+    NTC_type    : 130KT1608T
+    arg_names   : [ value ]
+    arg_add     : {'channel': 'ISRC7'}
+
 registers:
 
   - name        : control
@@ -206,4 +213,4 @@ registers:
     arg_names   : [ value ]
     arg_add     : { 'channel': 'INJ1'}
 
-    
+

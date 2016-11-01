@@ -15,7 +15,7 @@ from progressbar import ProgressBar
 import os
 
 local_configuration = {
-    "columns": [True]*2 +[False]*14,
+    "columns": [True]*1 +[False]*15,
     "stop_pixel_count": 4,
     "repeats" : 100000,
     #pars

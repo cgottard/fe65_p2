@@ -17,7 +17,7 @@ from basil.dut import Dut
 import os
 
 local_configuration = {
-    "columns" : [True] * 2 + [False] * 14,
+    "columns" : [True] * 1 + [False] * 15,
 
     #DAC parameters
     "PrmpVbpDac": 36,
@@ -30,7 +30,7 @@ local_configuration = {
     "preCompVbnDac" : 50,
 
     #thrs scan
-    "mask_steps": 4,
+    "mask_steps": 1,
     "repeat_command": 100,
     "scan_range": [0.0, 0.6, 0.01],
     "mask_filename": '',

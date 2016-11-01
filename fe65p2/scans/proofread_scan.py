@@ -86,7 +86,7 @@ class proofread_scan(ScanBase):
                 self.dut['VDDA'].set_enable(True)
                 self.dut['VDDD'].set_voltage(volt, unit='V')
                 self.dut['VDDD'].set_enable(True)
-                self.dut['VAUX'].set_voltage(volt, unit='V')
+                self.dut['VAUX'].set_voltage(1.5, unit='V')
                 self.dut['VAUX'].set_enable(True)
                 # global reg
                 self.dut['global_conf']['OneSr'] = 1
@@ -166,7 +166,11 @@ class proofread_scan(ScanBase):
 
     def shmoo_plotting(self):
         ''' pixel register shmoo plot '''
-        shmoopdf = PdfPages('shmoo.pdf')
+        wdir = os.path.join(os.getcwd(), "output_data")
+        if not os.path.exists(wdir):
+            os.makedirs(wdir)
+        plotname = "output_data/Shmoo_PixReg_"+str(time.strftime("%Y%m%d_%H%M%S_"))+".pdf"
+        shmoopdf = PdfPages(plotname)
         shmoonp = np.array(self.shmoo_errors)
         data = shmoonp.reshape(len(self.voltages), -1, order='F')
         fig, ax = plt.subplots()

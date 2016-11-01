@@ -75,7 +75,7 @@ proc main {} {
 
    puts "$myScript: project sources reloaded."
 
-   for {set i 5} {$i<6} {incr i} {
+   for {set i 0} {$i<16} {incr i} {
 #		set DCM2FX_div $dfx($index($i))
 #		set DCM2FX_mult $mfx($index($i))
 #		set DCM2DV_div $ddv($index($i))

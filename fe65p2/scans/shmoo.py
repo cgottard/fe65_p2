@@ -44,7 +44,6 @@ local_configuration = {
     "vbnLccDac": 1,
     "compVbnDac": 25,
     "preCompVbnDac": 50,
-
 }
 
 '''
@@ -56,91 +55,13 @@ local_configuration = {
 '''
 
 
-class DigitalScanFreq(object):
-    scan_id = "digital_scan"
+class Shmoo(ScanBase):
+    scan_id = "shmoo_scan"
 
-    def __init__(self, dut_conf=None, **kwargs):
-        self.dut = fe65p2(dut_conf)
-        self.dut.init()
-        self.dut.power_up()
-        time.sleep(0.1)
-        self.dut['global_conf']['PrmpVbpDac'] = kwargs['PrmpVbpDac']
-        self.dut['global_conf']['vthin1Dac'] = kwargs['vthin1Dac']
-        self.dut['global_conf']['vthin2Dac'] = kwargs['vthin2Dac']
-        self.dut['global_conf']['vffDac'] = kwargs['vffDac']
-        self.dut['global_conf']['PrmpVbnFolDac'] = kwargs['PrmpVbnFolDac']
-        self.dut['global_conf']['vbnLccDac'] = kwargs['vbnLccDac']
-        self.dut['global_conf']['compVbnDac'] = kwargs['compVbnDac']
-        self.dut['global_conf']['preCompVbnDac'] = kwargs['preCompVbnDac']
-        self.dut['global_conf']['Latency'] = 400
-        # chip['global_conf']['ColEn'][0] = 1
-        self.dut['global_conf']['ColEn'].setall(True)
-        self.dut['global_conf']['ColSrEn'].setall(True)  # enable programming of all columns
-        self.dut['global_conf']['ColSrOut'] = 15
-        self.dut['global_conf']['OneSr'] = 0  # all multi columns in parallel
-        self.dut.write_global()
-        self.dut['control']['RESET'] = 0b10
-        self.dut['control'].write()
-        self.clock_name = ''
-        self.working_dir = os.path.join(os.getcwd(), "output_data")
-        if not os.path.exists(self.working_dir):
-            os.makedirs(self.working_dir)
+    def __init__(self, dut_conf=None,):
+        super(Shmoo, self).__init__(dut_conf)
 
-    @contextmanager
-    def readout(self, *args, **kwargs):
-        timeout = kwargs.pop('timeout', 10.0)
 
-        # self.fifo_readout.readout_interval = 10
-        if not self._first_read:
-            self.fifo_readout.reset_rx()
-            time.sleep(0.1)
-            self.fifo_readout.print_readout_status()
-            self._first_read = True
-
-        self.start_readout(*args, **kwargs)
-        yield
-        self.fifo_readout.stop(timeout=timeout)
-
-    def start_readout(self, scan_param_id=0, *args, **kwargs):
-        # Pop parameters for fifo_readout.start
-        callback = kwargs.pop('callback', self.handle_data)
-        clear_buffer = kwargs.pop('clear_buffer', False)
-        fill_buffer = kwargs.pop('fill_buffer', False)
-        reset_sram_fifo = kwargs.pop('reset_sram_fifo', False)
-        errback = kwargs.pop('errback', self.handle_err)
-        no_data_timeout = kwargs.pop('no_data_timeout', None)
-        self.scan_param_id = scan_param_id
-        self.fifo_readout.start(reset_sram_fifo=reset_sram_fifo, fill_buffer=fill_buffer, clear_buffer=clear_buffer,
-                                callback=callback, errback=errback, no_data_timeout=no_data_timeout)
-
-    def handle_data(self, data_tuple):
-        '''Handling of the data.
-        '''
-        # print data_tuple[0].shape[0] #, data_tuple
-
-        total_words = self.raw_data_earray.nrows
-
-        self.raw_data_earray.append(data_tuple[0])
-        self.raw_data_earray.flush()
-
-        len_raw_data = data_tuple[0].shape[0]
-        self.meta_data_table.row['timestamp_start'] = data_tuple[1]
-        self.meta_data_table.row['timestamp_stop'] = data_tuple[2]
-        self.meta_data_table.row['error'] = data_tuple[3]
-        self.meta_data_table.row['data_length'] = len_raw_data
-        self.meta_data_table.row['index_start'] = total_words
-        total_words += len_raw_data
-        self.meta_data_table.row['index_stop'] = total_words
-        self.meta_data_table.row['scan_param_id'] = self.scan_param_id
-        self.meta_data_table.row.append()
-        self.meta_data_table.flush()
-
-    def handle_err(self, exc):
-        msg = '%s' % exc[1]
-        if msg:
-            logging.error('%s%s Aborting run...', msg, msg[-1])
-        else:
-            logging.error('Aborting run...')
 
     def scan(self, mask_steps=4, repeat_command=100, columns=[True] * 16, **kwargs):
         '''Scan loop
@@ -152,6 +73,14 @@ class DigitalScanFreq(object):
         repeat : int
             Number of injections.
         '''
+        self.dut['global_conf']['PrmpVbpDac'] = kwargs['PrmpVbpDac']
+        self.dut['global_conf']['vthin1Dac'] = kwargs['vthin1Dac']
+        self.dut['global_conf']['vthin2Dac'] = kwargs['vthin2Dac']
+        self.dut['global_conf']['vffDac'] = kwargs['vffDac']
+        self.dut['global_conf']['PrmpVbnFolDac'] = kwargs['PrmpVbnFolDac']
+        self.dut['global_conf']['vbnLccDac'] = kwargs['vbnLccDac']
+        self.dut['global_conf']['compVbnDac'] = kwargs['compVbnDac']
+        self.dut['global_conf']['preCompVbnDac'] = kwargs['preCompVbnDac']
 
         scan_path = os.path.dirname(os.path.realpath(sys.argv[0]))
         path = scan_path.replace('fe65p2/scans','firmware/bits/')
@@ -174,7 +103,13 @@ class DigitalScanFreq(object):
         self.not_fired = []
         for freq in self.bitfiles.iterkeys():
             logging.info("Loading " + self.bitfiles[freq])  # loading bitfile
-            self.dut['intf']._sidev.DownloadXilinx(path + self.bitfiles[freq])
+            setstatus = self.dut['intf']._sidev.DownloadXilinx(path + self.bitfiles[freq])
+
+            try:
+                setstatus == 0
+            except:
+                break
+
 
             for volt in self.voltages:
                 # to change the supply voltage
@@ -208,7 +143,10 @@ class DigitalScanFreq(object):
                 time.sleep(0.1)
 
                 self.fifo_readout = FifoReadout(self.dut)
-
+                self.dut['global_conf']['ColEn'].setall(True)
+                self.dut['global_conf']['ColSrEn'].setall(True)  # enable programming of all columns
+                self.dut['global_conf']['ColSrOut'] = 15
+                self.dut['global_conf']['OneSr'] = 1  #0 all multi columns in parallel
                 # write InjEnLd & PixConfLd to '1
                 self.dut['pixel_conf'].setall(True)
                 self.dut.write_pixel_col()
@@ -286,8 +224,9 @@ class DigitalScanFreq(object):
 
                         # just some time for last read
                     self.dut['trigger'].set_en(False)
-
+                    print "hi"
                     self.fifo_readout.print_readout_status()
+                    print "hi"
                     self.meta_data_table.attrs.power_status = yaml.dump(self.dut.power_status())
                     self.meta_data_table.attrs.dac_status = yaml.dump(self.dut.dac_status())
                     self.h5_file.close()
@@ -368,5 +307,5 @@ class DigitalScanFreq(object):
 
 
 if __name__ == "__main__":
-    scan = DigitalScanFreq(**local_configuration)
+    scan = Shmoo()
     scan.scan(**local_configuration)

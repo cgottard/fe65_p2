@@ -3,32 +3,19 @@ import sys
 import time
 import logging
 import yaml
-from contextlib import contextmanager
-from fe65p2.scan_base import ScanBase
-import tables as tb
+from fe65p2.scan_base import ScanBasefrom fe65p2.scan_base import ScanBase
+import fe65p2.plotting as  plottingimport tables as tb
+
 from bokeh.charts import output_file, show, vplot, hplot, save
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.table import Table
-from fe65p2.fe65p2 import fe65p2
-from fe65p2.fifo_readout import FifoReadout
-import fe65p2.plotting as  plotting
 import numpy as np
 import bitarray
 from collections import OrderedDict
 
 logging.basicConfig(level=logging.INFO,
                     format="%(asctime)s - %(name)s - [%(levelname)-8s] (%(threadName)-10s) %(message)s")
-
-
-class MetaTable(tb.IsDescription):
-    index_start = tb.UInt32Col(pos=0)
-    index_stop = tb.UInt32Col(pos=1)
-    data_length = tb.UInt32Col(pos=2)
-    timestamp_start = tb.Float64Col(pos=3)
-    timestamp_stop = tb.Float64Col(pos=4)
-    scan_param_id = tb.UInt16Col(pos=5)
-    error = tb.UInt32Col(pos=6)
 
 
 local_configuration = {
@@ -126,27 +113,6 @@ class Shmoo(ScanBase):
                 self._first_read = False
                 self.scan_param_id = 0
 
-                # .h5 output management
-                filename = self.output_filename + '.h5'
-                filter_raw_data = tb.Filters(complib='blosc', complevel=5, fletcher32=False)
-                self.filter_tables = tb.Filters(complib='zlib', complevel=5, fletcher32=False)
-                self.h5_file = tb.open_file(filename, mode='w', title=self.scan_id)
-                self.raw_data_earray = self.h5_file.createEArray(self.h5_file.root, name='raw_data', atom=tb.UIntAtom(),
-                                                                 shape=(0,), title='raw_data', filters=filter_raw_data)
-                self.meta_data_table = self.h5_file.createTable(self.h5_file.root, name='meta_data',
-                                                                description=MetaTable,
-                                                                title='meta_data', filters=self.filter_tables)
-
-                self.meta_data_table.attrs.kwargs = yaml.dump(kwargs)
-                self.dut['control']['RESET'] = 0b00
-                self.dut['control'].write()
-                time.sleep(0.1)
-
-                self.fifo_readout = FifoReadout(self.dut)
-                self.dut['global_conf']['ColEn'].setall(True)
-                self.dut['global_conf']['ColSrEn'].setall(True)  # enable programming of all columns
-                self.dut['global_conf']['ColSrOut'] = 15
-                self.dut['global_conf']['OneSr'] = 1  #0 all multi columns in parallel
                 # write InjEnLd & PixConfLd to '1
                 self.dut['pixel_conf'].setall(True)
                 self.dut.write_pixel_col()
@@ -155,6 +121,7 @@ class Shmoo(ScanBase):
                 self.dut['global_conf']['TDacLd'] = 0b1111
                 self.dut['global_conf']['PixConfLd'] = 0b11
                 self.dut.write_global()
+
                 # write SignLd & TDacLd to '0
                 self.dut['pixel_conf'].setall(False)
                 self.dut.write_pixel_col()
@@ -163,18 +130,22 @@ class Shmoo(ScanBase):
                 self.dut['global_conf']['TDacLd'] = 0b0000
                 self.dut['global_conf']['PixConfLd'] = 0b00
                 self.dut.write_global()
+
                 # test hit
                 self.dut['global_conf']['TestHit'] = 1
                 self.dut['global_conf']['SignLd'] = 0
                 self.dut['global_conf']['InjEnLd'] = 0
                 self.dut['global_conf']['TDacLd'] = 0
                 self.dut['global_conf']['PixConfLd'] = 0
+
                 self.dut['global_conf']['OneSr'] = 0  # all multi columns in parallel
                 self.dut['global_conf']['ColEn'][:] = bitarray.bitarray(columns)
                 self.dut.write_global()
+
                 self.dut['control']['RESET'] = 0b01
                 self.dut['control']['DISABLE_LD'] = 1
                 self.dut['control'].write()
+
                 self.dut['control']['CLK_OUT_GATE'] = 1
                 self.dut['control']['CLK_BX_GATE'] = 1
                 self.dut['control'].write()
@@ -222,18 +193,11 @@ class Shmoo(ScanBase):
                         while not self.dut['trigger'].is_done():
                             pass
 
-                        # just some time for last read
+                    # just some time for last read
                     self.dut['trigger'].set_en(False)
-                    print "hi"
-                    self.fifo_readout.print_readout_status()
-                    print "hi"
-                    self.meta_data_table.attrs.power_status = yaml.dump(self.dut.power_status())
-                    self.meta_data_table.attrs.dac_status = yaml.dump(self.dut.dac_status())
-                    self.h5_file.close()
-                    logging.info('Data Output Filename: %s', self.output_filename + '.h5')
+                    self.dut['testhit'].start()
                     self.analyze()
             self.dut.close()
-
         self.shmoo_plotting()
 
     def analyze(self):

@@ -19,23 +19,22 @@ par_conf = {
     "PrmpVbpDac": 36,
     "vthin1Dac": 255,
     "vthin2Dac": 0,
-    "vffDac" : 24,
-    "PrmpVbnFolDac" : 51,
-    "vbnLccDac" : 1,
-    "compVbnDac":25,
+    "vffDac" : 24,          #not subject to change
+    "PrmpVbnFolDac" : 51,   #not subject to change
+    "vbnLccDac" : 1,        #not subject to change
+    "compVbnDac":25,        #not subject to change
     "preCompVbnDac" : 50,
 }
 
 #parameter folder name
-par_string = "Prmp"+str(par_conf['PrmpVbpDac']) +"vth1"+str(par_conf['vthin1Dac'])+"vth2"+str(par_conf['vthin2Dac'])\
-             +"vff"+str(par_conf['vffDac'])+"PrmpF"+str(par_conf['PrmpVbnFolDac'])+"Lcc"+str(par_conf['vbnLccDac'])\
-             +"Cmp"+str(par_conf['compVbnDac'])+"PreCmp"+str(par_conf['preCompVbnDac'])
+par_string = "Prmp"+str(par_conf['PrmpVbpDac']) +"_vthA"+str(par_conf['vthin1Dac'])+"_vthB"+str(par_conf['vthin2Dac'])\
+             +"_PreCmp"+str(par_conf['preCompVbnDac'])
 
 
 def noise_sc():
     logging.info("Starting Noise Scan")
     noise_sc = NoiseScan()
-    noise_mask_file = noise_sc.output_filename
+    noise_mask_file = str(noise_sc.output_filename)+".h5"
 
     custom_conf = {
         "stop_pixel_count": 4,
@@ -78,7 +77,20 @@ def digi_sc():
     scan_conf = dict(par_conf, **custom_conf)
     digital_sc.start(**scan_conf)
     digital_sc.analyze()
-    digital_sc.dut.close()FX_prd
+    digital_sc.dut.close()
+
+def analog_sc():
+    logging.info("Starting Analog Scan")
+    ana_sc = AnalogScan()
+    custom_conf = {
+        "mask_steps": 4*64,
+        "repeat_command": 100
+    }
+
+    scan_conf = dict(par_conf, **custom_conf)
+    ana_sc.start(**scan_conf)
+    ana_sc.analyze()
+    ana_sc.dut.close()
 
 def timewalk_sc(mask):
     time_sc = TimewalkScan()
@@ -158,49 +170,44 @@ def scan_loop():
 
 if __name__ == "__main__":
 
-    os.chdir('...')
+    #logging.basicConfig(filename='example.log', filemode='w', level=logging.DEBUG)
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - [%(levelname)-8s] (%(threadName)-10s) %(message)s")
+    os.chdir('/Users/Carlo/Desktop/fe_65_irrad/')
+
 
     working_dir = os.path.join(os.getcwd(), par_string)
     if not os.path.exists(working_dir):
         os.makedirs(working_dir)
     os.chdir(working_dir)
 
-    #column independent scans
-    digi_shmoo_sc_cmd()
-    digi_shmoo_sc_data()
-    pix_reg_sc()
+    for c in cycle(range(0,2)): #goes on forever
 
-    for i in range(0,15):
-        cols = [False]*16
-        cols[i]=True
-        col_dir = os.path.join(os.getcwd(), "col"+str(i))
-        if not os.path.exists(col_dir):
-            os.makedirs(col_dir)
-        os.chdir(col_dir)
+        #column independent scans
+        digi_shmoo_sc_cmd()
+        digi_shmoo_sc_data()
+        pix_reg_sc()
 
+        for i in cycle(range(1,9)):
+            cols = [False]*16
+            j=2*i-1
+            cols[j-1]=True
+            cols[j]=True
+            par_conf['columns'] = cols
+            col_dir = os.path.join(os.getcwd(), "col"+str(i))
+            if not os.path.exists(col_dir):
+                os.makedirs(col_dir)
+            os.chdir(col_dir)
 
+            digi_sc()
+            thrs_mask = thresh_sc('')
+            time.sleep(1)
+            #here print vth1 and other thresholds, also to .log file
+            noise_masks = noise_sc()
+            time.sleep(1)
+            # here print vth1 and other thresholds, also to .log file
+            thrs_mask = thresh_sc(noise_masks)
+            os.chdir('..')
 
+        #for just 1 iteration
+        if c==1: break
 
-    '''
-    loop column by column
-        loop scan-by-scan
-            ...here thres(untuned), noise, thres(tuned)
-    '''
-
-#    digi_sc()
-
-
-    #noise_masks = noise_sc()
-    '''
-    noise_masks = '/home/carlo/fe65_p2/fe65p2/scans/output_data/20161026_180908_noise_scan'
-    print noise_masks
-    time.sleep(3)
-    thrs_mask = thresh_sc(str(noise_masks)+".h5")
-    print thrs_mask
-    digi_sc()
-    '''
-    #digi_shmoo_sc_data()
-    #digi_shmoo_sc_cmd()
-
-#    status = status_sc()
-#    status.print_status(**par_conf)

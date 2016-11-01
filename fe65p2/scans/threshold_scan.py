@@ -211,7 +211,7 @@ class ThresholdScan(ScanBase):
 
             hit_data = self.dut.interpret_raw_data(raw_data, meta_data)
             in_file_h5.createTable(in_file_h5.root, 'hit_data', hit_data, filters=self.filter_tables)
-
+            #self.meta_data_table.attrs.dac_status
         analysis.analyze_threshold_scan(h5_filename)
         status_plot = plotting.plot_status(h5_filename)
         occ_plot, H = plotting.plot_occupancy(h5_filename)

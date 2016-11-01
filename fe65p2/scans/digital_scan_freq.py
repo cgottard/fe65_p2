@@ -327,7 +327,8 @@ class DigitalScanFreq(object):
 
     def shmoo_plotting(self):
         ''' pixel register shmoo plot '''
-        shmoopdf = PdfPages('digital_shmoo.pdf')
+        plotname = "Shmoo_"+str(time.strftime("%Y%m%d_%H%M%S_"))+".pdf"
+        shmoopdf = PdfPages(plotname)
         shmoonp = np.array(self.not_fired)
         data = shmoonp.reshape(len(self.voltages), -1, order='F')
         fig, ax = plt.subplots()

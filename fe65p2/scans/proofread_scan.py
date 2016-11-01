@@ -166,10 +166,7 @@ class proofread_scan(ScanBase):
 
     def shmoo_plotting(self):
         ''' pixel register shmoo plot '''
-        wdir = os.path.join(os.getcwd(), "output_data")
-        if not os.path.exists(wdir):
-            os.makedirs(wdir)
-        plotname = "output_data/Shmoo_PixReg_"+str(time.strftime("%Y%m%d_%H%M%S_"))+".pdf"
+        plotname = "PixReg_"+str(time.strftime("%Y%m%d_%H%M%S_"))+".pdf"
         shmoopdf = PdfPages(plotname)
         shmoonp = np.array(self.shmoo_errors)
         data = shmoonp.reshape(len(self.voltages), -1, order='F')

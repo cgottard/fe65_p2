@@ -32,9 +32,9 @@ class ScanBase(object):
         self.dut = fe65p2(dut_conf)
         self.dut.init()
 
-        self.working_dir = os.path.join(os.getcwd(), "output_data")
-        if not os.path.exists(self.working_dir):
-            os.makedirs(self.working_dir)
+        self.working_dir = os.getcwd() #os.path.join(os.getcwd(), "output_data")
+#        if not os.path.exists(self.working_dir):
+#            os.makedirs(self.working_dir)
 
         self.run_name = time.strftime("%Y%m%d_%H%M%S_") + self.scan_id
         self.output_filename = os.path.join(self.working_dir, self.run_name)

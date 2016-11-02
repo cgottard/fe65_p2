@@ -1,5 +1,4 @@
 import os
-import sys
 import time
 import logging
 import yaml
@@ -15,6 +14,7 @@ from fe65p2.fifo_readout import FifoReadout
 import fe65p2.plotting as  plotting
 import numpy as np
 import bitarray
+import sys
 from collections import OrderedDict
 
 logging.basicConfig(level=logging.INFO,
@@ -34,17 +34,7 @@ class MetaTable(tb.IsDescription):
 local_configuration = {
     "mask_steps": 4,
     "repeat_command": 100,
-    "scan_type" : 'data',
-    # DAC parameters
-    "PrmpVbpDac": 36,
-    "vthin1Dac": 255,
-    "vthin2Dac": 0,
-    "vffDac": 42,
-    "PrmpVbnFolDac": 51,
-    "vbnLccDac": 1,
-    "compVbnDac": 25,
-    "preCompVbnDac": 50,
-
+    "scan_type" : 'cmd'
 }
 
 '''
@@ -64,14 +54,14 @@ class DigitalScanFreq(object):
         self.dut.init()
         self.dut.power_up()
         time.sleep(0.1)
-        self.dut['global_conf']['PrmpVbpDac'] = kwargs['PrmpVbpDac']
-        self.dut['global_conf']['vthin1Dac'] = kwargs['vthin1Dac']
-        self.dut['global_conf']['vthin2Dac'] = kwargs['vthin2Dac']
-        self.dut['global_conf']['vffDac'] = kwargs['vffDac']
-        self.dut['global_conf']['PrmpVbnFolDac'] = kwargs['PrmpVbnFolDac']
-        self.dut['global_conf']['vbnLccDac'] = kwargs['vbnLccDac']
-        self.dut['global_conf']['compVbnDac'] = kwargs['compVbnDac']
-        self.dut['global_conf']['preCompVbnDac'] = kwargs['preCompVbnDac']
+        self.dut['global_conf']['PrmpVbpDac'] = 36
+        self.dut['global_conf']['vthin1Dac'] = 255
+        self.dut['global_conf']['vthin2Dac'] = 0
+        self.dut['global_conf']['vffDac'] = 42
+        self.dut['global_conf']['PrmpVbnFolDac'] = 51
+        self.dut['global_conf']['vbnLccDac'] = 1
+        self.dut['global_conf']['compVbnDac'] = 25
+        self.dut['global_conf']['preCompVbnDac'] = 50
         self.dut['global_conf']['Latency'] = 400
         # chip['global_conf']['ColEn'][0] = 1
         self.dut['global_conf']['ColEn'].setall(True)
@@ -81,7 +71,7 @@ class DigitalScanFreq(object):
         self.dut.write_global()
         self.dut['control']['RESET'] = 0b10
         self.dut['control'].write()
-        self.clock_name = ''
+
         self.working_dir = os.path.join(os.getcwd(), "output_data")
         if not os.path.exists(self.working_dir):
             os.makedirs(self.working_dir)
@@ -154,28 +144,32 @@ class DigitalScanFreq(object):
         '''
 
         scan_path = os.path.dirname(os.path.realpath(sys.argv[0]))
-        path = scan_path.replace('fe65p2/scans','firmware/bits/')
-        self.scantype=kwargs['scan_type']
+        path = scan_path.replace('fe65p2/scans', 'firmware/bits/')
+        self.scantype = kwargs['scan_type']
 
         if self.scantype == 'cmd':
-            self.clock_name='CMD clock'
-            path = path+'CMD_bits/'
-            self.bitfiles = OrderedDict([(20,"fe65p2_mio_CMD20.bit"), (30,"fe65p2_mio_CMD30.bit"),(40,"fe65p2_mio_CMD40.bit"),(50,"fe65p2_mio_CMD50.bit"), (60,"fe65p2_mio_CMD60.bit"),(70,"fe65p2_mio_CMD70.bit"),(80,"fe65p2_mio_CMD80.bit"),(90,"fe65p2_mio_CMD90.bit"), (100,"fe65p2_mio_CMD100.bit"), (110,"fe65p2_mio_CMD110.bit"), (120,"fe65p2_mio_CMD120.bit")])#, (130,"fe65p2_mio_CMD130.bit"), (140,"fe65p2_mio_CMD140.bit"), (150,"fe65p2_mio_CMD150.bit"),  (160,"fe65p2_mio_CMD160.bit")])
+            self.clock_name = 'CMD clock'
+            path = path + 'newCMD_bits/'
+            self.bitfiles = OrderedDict([(50, "fe65p2_mio_CMD50.bit")])
+            self.bitfiles = OrderedDict(
+                [(20, "fe65p2_mio_CMD20.bit"), (30, "fe65p2_mio_CMD30.bit"), (40, "fe65p2_mio_CMD40.bit"),
+                 (50, "fe65p2_mio_CMD50.bit"), (60, "fe65p2_mio_CMD60.bit"), (70, "fe65p2_mio_CMD70.bit"),
+                 (80, "fe65p2_mio_CMD80.bit"), (90, "fe65p2_mio_CMD90.bit"), (100, "fe65p2_mio_CMD100.bit"),
+                 (110, "fe65p2_mio_CMD110.bit"), (120,"fe65p2_mio_CMD120.bit")])  # , (130,"fe65p2_mio_CMD130.bit"), (140,"fe65p2_mio_CMD140.bit"), (150,"fe65p2_mio_CMD150.bit"),  (160,"fe65p2_mio_CMD160.bit")])
 
         if self.scantype == 'data':
-            self.clock_name='DATA clock'
-            path = path+'newDATA_bits/'
-           # self.bitfiles = OrderedDict(
-           # [(160,"fe65p2_mio_DATA160.bit"),(120,"fe65p2_mio_DATA120.bit"), (100,"fe65p2_mio_DATA100.bit"),
-           #  (80,"fe65p2_mio_DATA80.bit"),(60,"fe65p2_mio_DATA60.bit"), (40,"fe65p2_mio_DATA40.bit")])
-            self.bitfiles = OrderedDict([(40, "fe65p2_mio_DATA40.bit"),(60, "fe65p2_mio_DATA60.bit"), (80, "fe65p2_mio_DATA80.bit"), (100, "fe65p2_mio_DATA100.bit"),(120, "fe65p2_mio_DATA120.bit"),(160, "fe65p2_mio_DATA160.bit")])
-        self.voltages = [1.2,1.15, 1.1, 1.0, 0.95, 0.90, 0.85]
-
+            self.clock_name = 'DATA clock'
+            path = path + 'newDATA_bits/'
+            self.bitfiles = OrderedDict(
+                [(40, "fe65p2_mio_DATA40.bit"), (60, "fe65p2_mio_DATA60.bit"), (80, "fe65p2_mio_DATA80.bit"),
+                 (100, "fe65p2_mio_DATA100.bit"), (120, "fe65p2_mio_DATA120.bit"), (160, "fe65p2_mio_DATA160.bit")])
+        self.voltages = [1.25, 1.2, 1.0, 0.95, 0.90]
         self.not_fired = []
         for freq in self.bitfiles.iterkeys():
+            self.dut.power_down()
             logging.info("Loading " + self.bitfiles[freq])  # loading bitfile
             self.dut['intf']._sidev.DownloadXilinx(path + self.bitfiles[freq])
-
+            self.dut.power_up()
             for volt in self.voltages:
                 # to change the supply voltage
                 self.dut['VDDA'].set_current_limit(200, unit='mA')
@@ -183,11 +177,11 @@ class DigitalScanFreq(object):
                 self.dut['VDDA'].set_enable(True)
                 self.dut['VDDD'].set_voltage(volt, unit='V')
                 self.dut['VDDD'].set_enable(True)
-                self.dut['VAUX'].set_voltage(1.2, unit='V')
+                self.dut['VAUX'].set_voltage(1.25, unit='V')
                 self.dut['VAUX'].set_enable(True)
                 logging.info(self.dut.power_status())  # prints power supply
                 self.run_name = time.strftime("%Y%m%d_%H%M%S_") + "_" + str(freq) + "MHz_" + str(volt) + "V"
-                self.output_filename = os.path.join(self.working_dir, self.run_name)
+                self.output_filename = os.path.join(self.working_dir, str(self.scantype)+'_'+str(self.run_name))
                 self._first_read = False
                 self.scan_param_id = 0
 
@@ -198,8 +192,7 @@ class DigitalScanFreq(object):
                 self.h5_file = tb.open_file(filename, mode='w', title=self.scan_id)
                 self.raw_data_earray = self.h5_file.createEArray(self.h5_file.root, name='raw_data', atom=tb.UIntAtom(),
                                                                  shape=(0,), title='raw_data', filters=filter_raw_data)
-                self.meta_data_table = self.h5_file.createTable(self.h5_file.root, name='meta_data',
-                                                                description=MetaTable,
+                self.meta_data_table = self.h5_file.createTable(self.h5_file.root, name='meta_data', description=MetaTable,
                                                                 title='meta_data', filters=self.filter_tables)
 
                 self.meta_data_table.attrs.kwargs = yaml.dump(kwargs)
@@ -247,7 +240,7 @@ class DigitalScanFreq(object):
 
                 # enable testhit pulse and trigger
                 wiat_for_read = (16 + columns.count(True) * (4 * 64 / mask_steps) * 2) * (20 / 2) + 100
-                self.dut['testhit'].set_delay(wiat_for_read*4)  # this should based on mask and enabled columns
+                self.dut['testhit'].set_delay(wiat_for_read * 4)  # this should based on mask and enabled columns
                 self.dut['testhit'].set_width(3)
                 self.dut['testhit'].set_repeat(repeat_command)
                 self.dut['testhit'].set_en(False)
@@ -287,15 +280,17 @@ class DigitalScanFreq(object):
                         # just some time for last read
                     self.dut['trigger'].set_en(False)
 
-                    self.fifo_readout.print_readout_status()
-                    self.meta_data_table.attrs.power_status = yaml.dump(self.dut.power_status())
-                    self.meta_data_table.attrs.dac_status = yaml.dump(self.dut.dac_status())
-                    self.h5_file.close()
-                    logging.info('Data Output Filename: %s', self.output_filename + '.h5')
-                    self.analyze()
-            self.dut.close()
-
+                    #self.fifo_readout.print_readout_status()
+                time.sleep(1)
+                self.meta_data_table.attrs.power_status = yaml.dump(self.dut.power_status())
+                self.meta_data_table.attrs.dac_status = yaml.dump(self.dut.dac_status())
+                self.h5_file.close()
+                logging.info('Data Output Filename: %s', self.output_filename + '.h5')
+                self.analyze()
+                self.dut.power_down()
+                time.sleep(2)
         self.shmoo_plotting()
+
 
     def analyze(self):
         plots = False
@@ -309,11 +304,11 @@ class DigitalScanFreq(object):
             hits = hits * 64
             hits = hits + hit_data['row']
             value = np.bincount(hits)
-            value = np.pad(value, (0, 64 * 64 - value.shape[0]), 'constant')
+            value = np.pad(value, (0, 64 * 64 - value.shape[0]), 'constant', constant_values=0)
             full_occupation = np.full(4096, 100, dtype=int)
             difference = full_occupation - value
             tot_diff = abs(np.sum(difference))
-            if tot_diff<400000: plots=True
+            if tot_diff < 400000: plots = True
             self.not_fired.append(tot_diff)
             logging.info('Shmoo plot entry: %s', str(tot_diff))
 
@@ -325,16 +320,17 @@ class DigitalScanFreq(object):
             save(vplot(occ_plot, tot_plot, lv1id_plot))
             return H
 
+
     def shmoo_plotting(self):
         ''' pixel register shmoo plot '''
-        plotname = "Shmoo_"+str(time.strftime("%Y%m%d_%H%M%S_"))+".pdf"
+        plotname = self.scantype+"_Shmoo_"+str(time.strftime("%Y%m%d_%H%M%S_"))+".pdf"
         shmoopdf = PdfPages(plotname)
         shmoonp = np.array(self.not_fired)
         data = shmoonp.reshape(len(self.voltages), -1, order='F')
         fig, ax = plt.subplots()
         plt.title('Missed Voltage Pulses (100 inj. x 4096 pix.)')
         ax.set_axis_off()
-        fig.text(0.70, 0.05, self.clock_name +' (MHz)', fontsize=14)
+        fig.text(0.70, 0.05, self.clock_name + ' (MHz)', fontsize=14)
         fig.text(0.02, 0.90, 'Supply voltage (V)', fontsize=14, rotation=90)
         tb = Table(ax, bbox=[0.01, 0.01, 0.99, 0.99])
         ncols = len(self.bitfiles)
@@ -344,25 +340,28 @@ class DigitalScanFreq(object):
         for (i, j), val in np.ndenumerate(data):
             color = ''
             val = abs(val)
-            #use different colors for frequencies above 110MHz where the FPGA is no more reliable
-            if(j<10):
+            # use different colors for frequencies above 110MHz where the FPGA is no more reliable
+            if (j < 10):
                 if (val == 0): color = 'green'
                 if (val > 0 & val < 50): color = 'yellow'
                 if val > 50: color = 'red'
-            #greyscale
-            if(j>9):
+                # greyscale
+            if (j > 9):
                 if (val == 0): color = 'white'
-                if (val > 0 & val < 50): color ='#b2b2b2'
+                if (val > 0 & val < 50): color = '#b2b2b2'
                 if val > 50: color = '#9a9a9a'
-            tb.add_cell(i, j, width, height, text=str(val),loc='center', facecolor=color)
+            tb.add_cell(i, j, width, height, text=str(val),
+                        loc='center', facecolor=color)
         # Row Labels...
         for i in range(len(self.voltages)):
-            tb.add_cell(i, -1, width, height, text=str(self.voltages[i]), loc='right',edgecolor='none', facecolor='none')
+            tb.add_cell(i, -1, width, height, text=str(self.voltages[i]), loc='right',
+                        edgecolor='none', facecolor='none')
         # Column Labels...
         colj = 0
         for j in self.bitfiles.iterkeys():
-            tb.add_cell(nrows + 1, colj, width, height / 2, text=str(j), loc='center',edgecolor='none', facecolor='none')
-            colj+=1
+            tb.add_cell(nrows + 1, colj, width, height / 2, text=str(j), loc='center',
+                        edgecolor='none', facecolor='none')
+            colj += 1
         ax.add_table(tb)
         shmoopdf.savefig()
         shmoopdf.close()

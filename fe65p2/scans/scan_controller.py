@@ -14,12 +14,12 @@ from itertools import cycle
 import logging
 
 par_conf = {
-    "columns": [True] * 1 + [False] * 15,
+    "columns": [True] * 16,
     #DAC parameters
     "PrmpVbpDac": 36,
     "vthin1Dac": 255,
     "vthin2Dac": 0,
-    "vffDac" : 24,          #not subject to change
+    "vffDac" : 42,          #not subject to change
     "PrmpVbnFolDac" : 51,   #not subject to change
     "vbnLccDac" : 1,        #not subject to change
     "compVbnDac":25,        #not subject to change
@@ -109,30 +109,34 @@ def timewalk_sc(mask):
 
 
 def digi_shmoo_sc_cmd():
-    digi_shmoo = DigitalScanFreq(None, **par_conf)
+    digi_shmoo = DigitalScanFreq(None)
     custom_conf = {
+
         "mask_steps": 4,
         "repeat_command": 100,
         "scan_type" : 'cmd'
     }
     scan_conf = dict(par_conf, **custom_conf)
-    digi_shmoo.scan(**scan_conf)
+    digi_shmoo.scan(**custom_conf)
+    digi_shmoo.dut.close()
 
 def digi_shmoo_sc_data():
-    digi_shmoo = DigitalScanFreq(None,**par_conf)
+    digi_shmoo = DigitalScanFreq(None)
     custom_conf = {
         "mask_steps": 4,
         "repeat_command": 100,
         "scan_type" : 'data'
     }
     scan_conf = dict(par_conf, **custom_conf)
-    digi_shmoo.scan(**scan_conf)
+    digi_shmoo.scan(**custom_conf)
+    digi_shmoo.dut.close()
 
 def pix_reg_sc():
     scan_path = os.path.dirname(os.path.realpath(sys.argv[0]))
     yaml_path = scan_path.replace('scans','fe65p2.yaml')
     pix_reg = proofread_scan()
     pix_reg.scan(**par_conf)
+    pix_reg.dut.close()
 
 
 
@@ -161,19 +165,16 @@ class status_sc(ScanBase):
         self.dut.close()
 
 
-def scan_loop():
-
-
-    cols = [False]*16
-
 
 
 if __name__ == "__main__":
 
     #logging.basicConfig(filename='example.log', filemode='w', level=logging.DEBUG)
+    for keys,values in par_conf.items():
+        print(keys)
+        print(values)
     logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - [%(levelname)-8s] (%(threadName)-10s) %(message)s")
-    os.chdir('/Users/Carlo/Desktop/fe_65_irrad/')
-
+    os.chdir('/media/carlo/1 TB/')
 
     working_dir = os.path.join(os.getcwd(), par_string)
     if not os.path.exists(working_dir):
@@ -182,12 +183,18 @@ if __name__ == "__main__":
 
     for c in cycle(range(0,2)): #goes on forever
 
+        #for just 1 iteration
+        if c==1: break
         #column independent scans
+        print 'CMD ************'
         digi_shmoo_sc_cmd()
+        print 'DATA ************'
         digi_shmoo_sc_data()
+        print 'PIX ************'
         pix_reg_sc()
 
         for i in cycle(range(1,9)):
+            print 'col ', i
             cols = [False]*16
             j=2*i-1
             cols[j-1]=True
@@ -208,6 +215,5 @@ if __name__ == "__main__":
             thrs_mask = thresh_sc(noise_masks)
             os.chdir('..')
 
-        #for just 1 iteration
-        if c==1: break
+
 

@@ -200,13 +200,13 @@ module fe65p2_mio (
     
 
     // ------- MODULES  ------- //
-    wire [7:0] GPIO_OUT;
+    wire [15:0] GPIO_OUT;
     gpio 
     #( 
         .BASEADDR(GPIO_BASEADDR), 
         .HIGHADDR(GPIO_HIGHADDR),
-        .IO_WIDTH(8),
-        .IO_DIRECTION(8'hff)
+        .IO_WIDTH(16),
+        .IO_DIRECTION(16'hffff)
     ) i_gpio
     (
         .BUS_CLK(BUS_CLK),
@@ -220,8 +220,12 @@ module fe65p2_mio (
     
     wire DISABLE_LD, LD;
     assign #1000 DUT_RESET = GPIO_OUT[1:0];
-    ODDR clk_bx_gate(.D1(GPIO_OUT[2]), .D2(1'b0), .C(CLK40), .CE(1'b1), .R(1'b0), .S(1'b0), .Q(DUT_CLK_BX) );
-    ODDR clk_out_gate(.D1(GPIO_OUT[6]), .D2(1'b0), .C(CLK160), .CE(1'b1), .R(1'b0), .S(1'b0), .Q(DUT_CLK_DATA) );
+	 wire INV_BX_CLK;
+	 wire INV_OUT_CLK;
+	 assign INV_BX_CLK = GPIO_OUT[8];
+	 assign INV_OUT_CLK = GPIO_OUT[9];
+    ODDR clk_bx_gate(.D1(INV_BX_CLK ? 1'b0: GPIO_OUT[2]), .D2(INV_BX_CLK ? GPIO_OUT[2] : 1'b0), .C(CLK40), .CE(1'b1), .R(1'b0), .S(1'b0), .Q(DUT_CLK_BX) );
+    ODDR clk_out_gate(.D1(INV_OUT_CLK ? 1'b0: GPIO_OUT[6]), .D2(INV_OUT_CLK ? GPIO_OUT[6] : 1'b0), .C(CLK160), .CE(1'b1), .R(1'b0), .S(1'b0), .Q(DUT_CLK_DATA) );
 //  ODDR clk_data_gate(.D1(1'b1), .D2(1'b0), .C(CLK160), .CE(1'b1), .R(1'b0), .S(1'b0), .Q(LEMO_TX[0]) );
 //  ODDR clk_pollo_gate(.D1(1'b1), .D2(1'b0), .C(CLK40), .CE(1'b1), .R(1'b0), .S(1'b0), .Q(LEMO_TX[1]) );
 //  ODDR clk_cane_gate(.D1(1'b1), .D2(1'b0), .C(CLK8), .CE(1'b1), .R(1'b0), .S(1'b0), .Q(LEMO_TX[2]) );

@@ -55,7 +55,7 @@ class proofread_scan(ScanBase):
         self.dut['global_conf']['preCompVbnDac'] = kwargs['preCompVbnDac']
 
         scan_path = os.path.dirname(os.path.realpath(sys.argv[0]))
-        path = scan_path.replace('fe65p2/scans','firmware/bits/SPI_bits/')
+        path = scan_path.replace('fe65p2/scans','firmware/bits/newSPI_bits/')
 #        self.bitfiles = ["fe65p2_mio_1MHz.bit", "fe65p2_mio_2MHz.bit", "fe65p2_mio_5MHz.bit", "fe65p2_mio_10MHz.bit",
 #                         "fe65p2_mio_20MHz.bit", "fe65p2_mio_40MHz.bit"]
         self.bitfiles = ["fe65p2_mio_3MHz.bit", "fe65p2_mio_4MHz.bit", "fe65p2_mio_6MHz.bit",
@@ -106,7 +106,7 @@ class proofread_scan(ScanBase):
                 self.dut.write_global()
                 self.dut.write_global()  # need to write 2 times!
 
-                logging.info(scan.dut.power_status())  # prints power supply
+                logging.info(self.dut.power_status())  # prints power supply
 
                 send = self.dut['global_conf'].tobytes()
                 rec = self.dut['global_conf'].get_data(size=19)

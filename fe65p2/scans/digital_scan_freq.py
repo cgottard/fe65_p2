@@ -58,6 +58,7 @@ class DigitalScanFreq(object):
 #        self.dut['control'].write()
 
         time.sleep(0.1)
+        #TODO: try to put kwargs here
         self.dut['global_conf']['PrmpVbpDac'] = 36
         self.dut['global_conf']['vthin1Dac'] = 255
         self.dut['global_conf']['vthin2Dac'] = 0

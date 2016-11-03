@@ -15,6 +15,7 @@ import os
 local_configuration = {
     "mask_steps": 4,
     "repeat_command": 100,
+    "columns" : [True] * 16,
 
     #DAC parameters
     "PrmpVbpDac": 36,

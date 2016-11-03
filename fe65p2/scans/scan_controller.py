@@ -44,6 +44,9 @@ def noise_sc():
     scan_conf = dict(par_conf, **custom_conf)
     noise_sc.start(**scan_conf)
     noise_sc.analyze()
+
+
+    print noise_sc.vth1Dac
     noise_sc.dut.close()
     return noise_mask_file
 
@@ -186,11 +189,11 @@ if __name__ == "__main__":
         #for just 1 iteration
         if c==1: break
         #column independent scans
-        print 'CMD ************'
+        print '*** CMD SCAN ***'
         digi_shmoo_sc_cmd()
-        print 'DATA ************'
+        print '*** DATA SCAN ***'
         digi_shmoo_sc_data()
-        print 'PIX ************'
+        print '*** PIX REG SCAN ***'
         pix_reg_sc()
 
         for i in cycle(range(1,9)):
@@ -210,6 +213,7 @@ if __name__ == "__main__":
             time.sleep(1)
             #here print vth1 and other thresholds, also to .log file
             noise_masks = noise_sc()
+
             time.sleep(1)
             # here print vth1 and other thresholds, also to .log file
             thrs_mask = thresh_sc(noise_masks)

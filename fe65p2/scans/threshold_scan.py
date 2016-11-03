@@ -1,13 +1,9 @@
-
 from fe65p2.scan_base import ScanBase
-import fe65p2.plotting as  plotting
+import fe65p2.plotting as plotting
 import time
 import fe65p2.analysis as analysis
-
 import yaml
 import logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - [%(levelname)-8s] (%(threadName)-10s) %(message)s")
-
 import numpy as np
 import bitarray
 import tables as tb
@@ -16,24 +12,26 @@ from progressbar import ProgressBar
 from basil.dut import Dut
 import os
 
-local_configuration = {
-    "columns" : [True] * 2 + [False] * 14,
-    #DAC parameters
-    "PrmpVbpDac": 36,
-    "vthin1Dac": 255,
-    "vthin2Dac": 0,
-    "vffDac" : 24,
-    "PrmpVbnFolDac" : 51,
-    "vbnLccDac" : 1,
-    "compVbnDac":25,
-    "preCompVbnDac" : 50,
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - [%(levelname)-8s] (%(threadName)-10s) %(message)s")
 
-    #thrs scan
-    "mask_steps": 4,
-    "repeat_command": 100,
-    "scan_range": [0.0, 0.6, 0.01],
-    "mask_filename": '',
-    "TDAC" : 16
+local_configuration = {
+    "columns":[True] * 2 + [False] * 14,
+#   DAC parameters
+    "PrmpVbpDac":36,
+    "vthin1Dac":255,
+    "vthin2Dac":0,
+    "vffDac":24,
+    "PrmpVbnFolDac":51,
+    "vbnLccDac":1,
+    "compVbnDac":25,
+    "preCompVbnDac":50,
+
+#   thrs scan
+    "mask_steps":4,
+    "repeat_command":100,
+    "scan_range":[0.0, 0.6, 0.01],
+    "mask_filename":'',
+    "TDAC":16
 }
 
 class ThresholdScan(ScanBase):
@@ -45,20 +43,22 @@ class ThresholdScan(ScanBase):
         '''Scan loop
         Parameters
         ----------
-        mask : int
+        mask_filename : int
             Number of mask steps.
-        repeat : int
+        repeat_command : int
             Number of injections.
+        TDAC : int
+            initial pixel threshold value
         '''
-        def laod_vthin1Dac(mask):
-            if os._exists(mask):
-                in_file_h5 = tb.open_file(mask, 'r')
-                dac_status = yaml.load(in_file_h5.root.meta_data.attrs.dac_status)
+        def load_vthin1Dac(mask):
+            if os.path.exists(mask):
+                in_file = tb.open_file(mask, 'r')
+                dac_status = yaml.load(in_file.root.meta_data.attrs.dac_status)
                 vthrs1 = dac_status['vthin1Dac'] + 3
                 return vthrs1
             else: return 100
 
-        vth1 = laod_vthin1Dac(mask_filename)
+        vth1 = load_vthin1Dac(mask_filename)
 
         inj_factor = 1.0
         INJ_LO = 0.0
@@ -126,7 +126,7 @@ class ThresholdScan(ScanBase):
         if mask_filename:
             logging.info('Using pixel mask from file: %s', mask_filename)
 
-            with tb.open_file(mask_filename, 'r') as in_file_h5:
+            with tb.open_file(str(mask_filename), 'r') as in_file_h5:
                 mask_tdac = in_file_h5.root.scan_results.tdac_mask[:]
                 mask_en = in_file_h5.root.scan_results.en_mask[:]
 
@@ -154,7 +154,7 @@ class ThresholdScan(ScanBase):
 
         for idx, k in enumerate(scan_range):
             dut['Pulser'].set_voltage(INJ_LO, float(INJ_LO + k), unit='V')
-            self.dut['INJ_HI'].set_voltage( float(INJ_LO + k), unit='V')
+            self.dut['INJ_HI'].set_voltage(float(INJ_LO + k), unit='V')
             time.sleep(0.5)
 
             bv_mask = bitarray.bitarray(lmask)
@@ -164,10 +164,11 @@ class ThresholdScan(ScanBase):
                 pbar = ProgressBar(maxval=mask_steps).start()
                 for i in range(mask_steps):
 
-                    self.dut['global_conf']['vthin1Dac'] = 255
-                    self.dut['global_conf']['preCompVbnDac'] = 50
-                    self.dut['global_conf']['vthin2Dac'] = 0
-                    self.dut['global_conf']['PrmpVbpDac'] = 80
+                    self.dut['global_conf']['vthin1Dac'] = kwargs['vthin1Dac']
+                    self.dut['global_conf']['preCompVbnDac'] = kwargs['preCompVbnDac']
+                    self.dut['global_conf']['vthin2Dac'] = kwargs['vthin2Dac']
+                    self.dut['global_conf']['PrmpVbpDac'] = kwargs['PrmpVbpDac']
+
                     self.dut.write_global()
                     time.sleep(0.1)
 
@@ -223,7 +224,6 @@ class ThresholdScan(ScanBase):
         save(vplot(hplot(occ_plot, tot_plot, lv1id_plot), scan_pix_hist, t_dac, status_plot))
 
 if __name__ == "__main__":
-
     scan = ThresholdScan()
     scan.start(**local_configuration)
     scan.analyze()

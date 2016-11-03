@@ -12,6 +12,8 @@ from matplotlib.table import Table
 logging.basicConfig(level=logging.INFO,
                     format="%(asctime)s - %(name)s - [%(levelname)-8s] (%(threadName)-10s) %(message)s")
 local_configuration = {
+    "mask_steps" : 4,
+    "columns" : [True] * 16,
     # DAC parameters
     "PrmpVbpDac": 36,
     "vthin1Dac": 255,
@@ -56,8 +58,7 @@ class proofread_scan(ScanBase):
 
         scan_path = os.path.dirname(os.path.realpath(sys.argv[0]))
         path = scan_path.replace('fe65p2/scans','firmware/bits/goodSPI_bits/')
-#        self.bitfiles = ["fe65p2_mio_1MHz.bit", "fe65p2_mio_2MHz.bit", "fe65p2_mio_5MHz.bit", "fe65p2_mio_10MHz.bit",
-#                         "fe65p2_mio_20MHz.bit", "fe65p2_mio_40MHz.bit"]
+
         self.bitfiles = ["fe65p2_mio_3MHz.bit", "fe65p2_mio_4MHz.bit", "fe65p2_mio_6MHz.bit",
                          "fe65p2_mio_8MHz.bit", "fe65p2_mio_12MHz.bit", "fe65p2_mio_16MHz.bit",
                          "fe65p2_mio_24MHz.bit", "fe65p2_mio_32MHz.bit"]
@@ -89,20 +90,22 @@ class proofread_scan(ScanBase):
                 self.dut['VAUX'].set_voltage(1.5, unit='V')
                 self.dut['VAUX'].set_enable(True)
                 # global reg
+                self.dut['global_conf']['PrmpVbpDac'] = kwargs['PrmpVbpDac']
+                self.dut['global_conf']['vthin1Dac'] = kwargs['vthin1Dac']
+                self.dut['global_conf']['vthin2Dac'] = kwargs['vthin2Dac']
+                self.dut['global_conf']['vffDac'] = kwargs['vffDac']
+                self.dut['global_conf']['PrmpVbnFolDac'] = kwargs['PrmpVbnFolDac']
+                self.dut['global_conf']['vbnLccDac'] = kwargs['vbnLccDac']
+                self.dut['global_conf']['compVbnDac'] = kwargs['compVbnDac']
+                self.dut['global_conf']['preCompVbnDac'] = kwargs['preCompVbnDac']
+
                 self.dut['global_conf']['OneSr'] = 1
-                self.dut['global_conf']['PrmpVbpDac'] = 36
-                self.dut['global_conf']['vthin1Dac'] = 255
-                self.dut['global_conf']['vthin2Dac'] = 0
-                self.dut['global_conf']['vffDac'] = 42  # added by me, default 42
                 self.dut['global_conf']['SPARE'] = 0  # added by me, default 0
                 self.dut['global_conf']['ColEn'] = 0  # added by me, default 0
                 self.dut['global_conf']['ColSrEn'] = 15  # added by me, default 15
                 self.dut['global_conf']['Latency'] = 400  # added by me, default 0
-                self.dut['global_conf']['PrmpVbnFolDac'] = 0
-                self.dut['global_conf']['vbnLccDac'] = 51
-                self.dut['global_conf']['compVbnDac'] = 25
-                self.dut['global_conf']['preCompVbnDac'] = 50
                 self.dut['global_conf']['ColSrEn'].setall(True)  # enable programming of all columns
+
                 self.dut.write_global()
                 self.dut.write_global()  # need to write 2 times!
 

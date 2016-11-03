@@ -34,6 +34,10 @@ local_configuration = {
 class NoiseScan(ScanBase):
     scan_id = "noise_scan"
 
+    def __init__(self):
+        super(NoiseScan, self).__init__()
+        self.vth1Dac = 0
+
     def scan(self, columns=[True] * 16, stop_pixel_count=4, repeats=100000, **kwargs):
         '''Scan loop
         Parameters
@@ -137,18 +141,18 @@ class NoiseScan(ScanBase):
         iteration = 0
 
 
-        vth1Dac = kwargs['vthin1Dac']
+        self.vth1Dac = kwargs['vthin1Dac']
 
         while not finished:
-            with self.readout(scan_param_id=vth1Dac, fill_buffer=True, clear_buffer=True):
-                self.dut['global_conf']['vthin1Dac'] = vth1Dac
+            with self.readout(scan_param_id=self.vth1Dac, fill_buffer=True, clear_buffer=True):
+                self.dut['global_conf']['vthin1Dac'] = self.vth1Dac
                 self.dut['global_conf']['vthin2Dac'] =  kwargs['vthin2Dac']
                 self.dut['global_conf']['preCompVbnDac'] = kwargs['preCompVbnDac']
                 self.dut['global_conf']['PrmpVbpDac'] = kwargs['PrmpVbpDac']
                 self.dut.write_global()
                 time.sleep(0.1)
 
-                logging.info('Scan iteration: %d (vthin1Dac = %d)', iteration,  vth1Dac)
+                logging.info('Scan iteration: %d (vthin1Dac = %d)', iteration,  self.vth1Dac)
                 pbar = ProgressBar(maxval=10).start()
 
                 for i in range(10):
@@ -197,11 +201,11 @@ class NoiseScan(ScanBase):
 
                 logging.debug('col=%d row=%d val=%d mask=%d', i / 64, i % 64, value[i], mask_tdac[col, row])
 
-            if vth1Dac < 1 or mask_disable_count >= stop_pixel_count:
+            if self.vth1Dac < 1 or mask_disable_count >= stop_pixel_count:
                 finished = True
 
             if not corrected:
-                vth1Dac -= vthin1DacInc
+                self.vth1Dac -= vthin1DacInc
 
             time.sleep(0.1)
 
@@ -209,7 +213,7 @@ class NoiseScan(ScanBase):
             self.dut.write_tune_mask(mask_tdac)
 
             iteration += 1
-        self.dut['global_conf']['vthin1Dac'] = vth1Dac
+        self.dut['global_conf']['vthin1Dac'] = self.vth1Dac
         self.dut['global_conf']['vthin2Dac'] = kwargs['vthin2Dac']
         self.dut['global_conf']['preCompVbnDac'] = kwargs['preCompVbnDac']
         self.dut['global_conf']['PrmpVbpDac'] = kwargs['PrmpVbpDac']
@@ -217,7 +221,7 @@ class NoiseScan(ScanBase):
         scan_results = self.h5_file.create_group("/", 'scan_results', 'Scan Results')
         self.h5_file.createCArray(scan_results, 'tdac_mask', obj=mask_tdac)
         self.h5_file.createCArray(scan_results, 'en_mask', obj=mask_en)
-        logging.info('Final vthin1Dac value: ',vth1Dac)
+        logging.info('Final vthin1Dac value: ',self.vth1Dac)
 
     def analyze(self):
         h5_filename = self.output_filename + '.h5'

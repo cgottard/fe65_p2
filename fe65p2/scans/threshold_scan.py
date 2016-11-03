@@ -17,8 +17,7 @@ from basil.dut import Dut
 import os
 
 local_configuration = {
-    "columns" : [True] * 1 + [False] * 15,
-
+    "columns" : [True] * 2 + [False] * 14,
     #DAC parameters
     "PrmpVbpDac": 36,
     "vthin1Dac": 255,
@@ -30,7 +29,7 @@ local_configuration = {
     "preCompVbnDac" : 50,
 
     #thrs scan
-    "mask_steps": 1,
+    "mask_steps": 4,
     "repeat_command": 100,
     "scan_range": [0.0, 0.6, 0.01],
     "mask_filename": '',
@@ -57,7 +56,7 @@ class ThresholdScan(ScanBase):
                 dac_status = yaml.load(in_file_h5.root.meta_data.attrs.dac_status)
                 vthrs1 = dac_status['vthin1Dac'] + 3
                 return vthrs1
-            else: return kwargs['vthin1Dac']
+            else: return 100
 
         vth1 = laod_vthin1Dac(mask_filename)
 

@@ -30,7 +30,7 @@ local_configuration = {
     "PrmpVbpDac": 50,
     "columns": [True] * 2 + [False] * 14,
     "mask_filename": '',
-    "pix_list": [(0,0) ],
+    "pix_list": [(2,6) ],
 }
 
 

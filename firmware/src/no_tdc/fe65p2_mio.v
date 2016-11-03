@@ -388,7 +388,7 @@ module fe65p2_mio (
         .BUS_WR(BUS_WR)
     );
     
-    tdc_s3 #(
+ /*   tdc_s3 #(
         .BASEADDR(TDC_BASEADDR),
         .HIGHADDR(TDC_HIGHADDR),
         .CLKDV(4),
@@ -396,12 +396,12 @@ module fe65p2_mio (
         .FAST_TDC(1),
         .FAST_TRIGGER(1)
     ) i_tdc (
-        .CLK320(CLK320),
-        .CLK160(CLK160),
-        .DV_CLK(CLK40),
-        .TDC_IN(DUT_HIT_OR),
+        .CLK320(1'b0),//CLK320),
+        .CLK160(1'b0),//CLK160),
+        .DV_CLK(1'b0),//CLK40),
+        .TDC_IN(1'b0),//(DUT_HIT_OR),
         .TDC_OUT(LEMO_TX[0]),
-        .TRIG_IN(LEMO_RX[0]),
+        .TRIG_IN(1'b0),//(LEMO_RX[0]),
         .TRIG_OUT(),
 
         .FIFO_READ(TDC_FIFO_READ),
@@ -419,12 +419,13 @@ module fe65p2_mio (
         .EXT_EN(1'b0),
         
         .TIMESTAMP(16'b0)
-    );
+    );*/
 
 
 	 assign LEMO_TX[1] = DUT_INJ;
+	 assign LEMO_TX[0] = 1'b0;	
 	 assign LEMO_TX[2] = 1'b0;	
-//	 assign TDC_FIFO_EMPTY = 1;
+	 assign TDC_FIFO_EMPTY = 1;
 
     wire USB_READ;
     assign USB_READ = FREAD & FSTROBE;

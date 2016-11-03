@@ -53,6 +53,10 @@ class DigitalScanFreq(object):
         self.dut = fe65p2(dut_conf)
         self.dut.init()
         self.dut.power_up()
+
+#        self.dut['control']['INV_BX_CLK'] = 0
+#        self.dut['control'].write()
+
         time.sleep(0.1)
         self.dut['global_conf']['PrmpVbpDac'] = 36
         self.dut['global_conf']['vthin1Dac'] = 255
@@ -149,21 +153,21 @@ class DigitalScanFreq(object):
 
         if self.scantype == 'cmd':
             self.clock_name = 'CMD clock'
-            path = path + 'newCMD_bits/'
-            self.bitfiles = OrderedDict([(50, "fe65p2_mio_CMD50.bit")])
+            path = path + 'goodCMD_bits/'
+            #self.bitfiles = OrderedDict([(50, "fe65p2_mio_CMD50.bit")])
             self.bitfiles = OrderedDict(
                 [(20, "fe65p2_mio_CMD20.bit"), (30, "fe65p2_mio_CMD30.bit"), (40, "fe65p2_mio_CMD40.bit"),
                  (50, "fe65p2_mio_CMD50.bit"), (60, "fe65p2_mio_CMD60.bit"), (70, "fe65p2_mio_CMD70.bit"),
                  (80, "fe65p2_mio_CMD80.bit"), (90, "fe65p2_mio_CMD90.bit"), (100, "fe65p2_mio_CMD100.bit"),
-                 (110, "fe65p2_mio_CMD110.bit"), (120,"fe65p2_mio_CMD120.bit")])  # , (130,"fe65p2_mio_CMD130.bit"), (140,"fe65p2_mio_CMD140.bit"), (150,"fe65p2_mio_CMD150.bit"),  (160,"fe65p2_mio_CMD160.bit")])
+                 (110, "fe65p2_mio_CMD110.bit")])  # , (130,"fe65p2_mio_CMD130.bit"), (140,"fe65p2_mio_CMD140.bit"), (150,"fe65p2_mio_CMD150.bit"),  (160,"fe65p2_mio_CMD160.bit")])
 
         if self.scantype == 'data':
             self.clock_name = 'DATA clock'
-            path = path + 'newDATA_bits/'
+            path = path + 'goodDATA_bits/'
             self.bitfiles = OrderedDict(
                 [(40, "fe65p2_mio_DATA40.bit"), (60, "fe65p2_mio_DATA60.bit"), (80, "fe65p2_mio_DATA80.bit"),
                  (100, "fe65p2_mio_DATA100.bit"), (120, "fe65p2_mio_DATA120.bit"), (160, "fe65p2_mio_DATA160.bit")])
-        self.voltages = [1.25, 1.2, 1.0, 0.95, 0.90]
+        self.voltages = [1.2, 1.0, 0.95, 0.90]
         self.not_fired = []
         for freq in self.bitfiles.iterkeys():
             self.dut.power_down()
@@ -240,7 +244,7 @@ class DigitalScanFreq(object):
 
                 # enable testhit pulse and trigger
                 wiat_for_read = (16 + columns.count(True) * (4 * 64 / mask_steps) * 2) * (20 / 2) + 100
-                self.dut['testhit'].set_delay(wiat_for_read * 4)  # this should based on mask and enabled columns
+                self.dut['testhit'].set_delay(wiat_for_read * 8)  # this should based on mask and enabled columns
                 self.dut['testhit'].set_width(3)
                 self.dut['testhit'].set_repeat(repeat_command)
                 self.dut['testhit'].set_en(False)

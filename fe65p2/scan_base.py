@@ -112,6 +112,11 @@ class ScanBase(object):
         self.h5_file.close()
         logging.info('Data Output Filename: %s', self.output_filename + '.h5')
 
+        #t_log = time.strftime("%d-%b-%H:%M:%S")+"\t"+str(temp)
+        #with open("temp_log.txt", "a") as myfile:
+        #    myfile.write(t_log)
+
+
         logger.removeHandler(fh)
         self.dut.power_down()
 

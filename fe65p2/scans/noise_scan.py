@@ -37,6 +37,7 @@ class NoiseScan(ScanBase):
     def __init__(self):
         super(NoiseScan, self).__init__()
         self.vth1Dac = 0
+        self.final_vth1=0
 
     def scan(self, columns=[True] * 16, stop_pixel_count=4, repeats=100000, **kwargs):
         '''Scan loop
@@ -222,6 +223,7 @@ class NoiseScan(ScanBase):
         self.h5_file.createCArray(scan_results, 'tdac_mask', obj=mask_tdac)
         self.h5_file.createCArray(scan_results, 'en_mask', obj=mask_en)
         logging.info('Final vthin1Dac value: %s', str(self.vth1Dac))
+        self.final_vth1=self.vth1Dac
 
     def analyze(self):
         h5_filename = self.output_filename + '.h5'

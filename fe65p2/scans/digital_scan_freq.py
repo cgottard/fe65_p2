@@ -53,6 +53,7 @@ class DigitalScanFreq(object):
         self.dut = fe65p2(dut_conf)
         self.dut.init()
         self.dut.power_up()
+        self.plots = True
 
 #        self.dut['control']['INV_BX_CLK'] = 0
 #        self.dut['control'].write()
@@ -66,7 +67,7 @@ class DigitalScanFreq(object):
         self.dut['global_conf']['PrmpVbnFolDac'] = 51
         self.dut['global_conf']['vbnLccDac'] = 1
         self.dut['global_conf']['compVbnDac'] = 25
-        self.dut['global_conf']['preCompVbnDac'] = 50
+        self.dut['global_conf']['preCompVbnDac'] = 110
         self.dut['global_conf']['Latency'] = 400
         # chip['global_conf']['ColEn'][0] = 1
         self.dut['global_conf']['ColEn'].setall(True)
@@ -300,7 +301,6 @@ class DigitalScanFreq(object):
 
 
     def analyze(self):
-        plots = False
         h5_filename = self.output_filename + '.h5'
         with tb.open_file(h5_filename, 'r+') as in_file_h5:
             raw_data = in_file_h5.root.raw_data[:]
@@ -319,7 +319,7 @@ class DigitalScanFreq(object):
             self.not_fired.append(tot_diff)
             logging.info('Shmoo plot entry: %s', str(tot_diff))
 
-        if plots == True:
+        if self.plots == True:
             occ_plot, H = plotting.plot_occupancy(h5_filename)
             tot_plot, _ = plotting.plot_tot_dist(h5_filename)
             lv1id_plot, _ = plotting.plot_lv1id_dist(h5_filename)

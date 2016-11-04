@@ -14,6 +14,10 @@ import time
 from itertools import cycle
 import logging
 
+
+fe65p2_path="/home/carlo/fe65_p2"
+storage_dir="/media/carlo/1 TB/"
+
 par_conf = {
     "columns": [True] * 16,
     #DAC parameters
@@ -24,7 +28,7 @@ par_conf = {
     "PrmpVbnFolDac" : 51,   #not subject to change
     "vbnLccDac" : 1,        #not subject to change
     "compVbnDac":25,        #not subject to change
-    "preCompVbnDac" : 50,
+    "preCompVbnDac" : 110,
 }
 
 #parameter folder name
@@ -114,6 +118,7 @@ def timewalk_sc(mask):
 
 def digi_shmoo_sc_cmd():
     digi_shmoo = DigitalScanFreq(None)
+    digi_shmoo.plots=False
     custom_conf = {
 
         "mask_steps": 4,
@@ -126,6 +131,7 @@ def digi_shmoo_sc_cmd():
 
 def digi_shmoo_sc_data():
     digi_shmoo = DigitalScanFreq(None)
+    digi_shmoo.plots=False
     custom_conf = {
         "mask_steps": 4,
         "repeat_command": 100,
@@ -136,9 +142,7 @@ def digi_shmoo_sc_data():
     digi_shmoo.dut.close()
 
 def pix_reg_sc():
-    scan_path = os.path.dirname(os.path.realpath(sys.argv[0]))
-    yaml_path = scan_path.replace('scans','fe65p2.yaml')
-    pix_reg = proofread_scan()
+    pix_reg = proofread_scan(fe65p2_path+"/fe65p2/fe65p2.yaml")
     pix_reg.scan(**par_conf)
     pix_reg.dut.close()
 
@@ -148,7 +152,7 @@ class status_sc(ScanBase):
     scan_id = "status_scan"
 
     def load_bit(self):
-        self.dut['intf']._sidev.DownloadXilinx("/home/carlo/fe65_p2/firmware/ise/fe65p2_mio.bit")
+        self.dut['intf']._sidev.DownloadXilinx(fe65p2_path+"/firmware/ise/fe65p2_mio.bit")
         self.dut['VDDA'].set_current_limit(200, unit='mA')
         self.dut['VDDA'].set_voltage(1.2, unit='V')
         self.dut['VDDA'].set_enable(True)
@@ -179,7 +183,7 @@ if __name__ == "__main__":
         print(keys)
         print(values)
     logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - [%(levelname)-8s] (%(threadName)-10s) %(message)s")
-    os.chdir('/media/carlo/1 TB/')
+    os.chdir(storage_dir)
 
     working_dir = os.path.join(os.getcwd(), par_string)
     if not os.path.exists(working_dir):
@@ -190,7 +194,7 @@ if __name__ == "__main__":
         #for just 1 iteration
         #if c==1: break
         #column independent scans
-
+        '''
         print '*** CMD SCAN ***'
         loadbit = status_sc()
         loadbit.load_bit()
@@ -209,6 +213,7 @@ if __name__ == "__main__":
         os.chdir(dir)
         digi_shmoo_sc_data()
         os.chdir('..')
+        '''
         print '*** PIX REG SCAN ***'
         dir = os.path.join(os.getcwd(), "PIX_shmoo")
         if not os.path.exists(dir):

@@ -55,6 +55,7 @@ class ThresholdScan(ScanBase):
                 in_file = tb.open_file(mask, 'r')
                 dac_status = yaml.load(in_file.root.meta_data.attrs.dac_status)
                 vthrs1 = dac_status['vthin1Dac'] + 3
+                print "Loaded vth1 from noise scan: ", vthrs1
                 return vthrs1
             else: return 100
 
@@ -124,7 +125,7 @@ class ThresholdScan(ScanBase):
                 mask_en[inx*4:(inx+1)*4,:]  = True
 
         if mask_filename:
-            logging.info('Using pixel mask from file: %s', mask_filename)
+            logging.info('***** Using pixel mask from file: %s', mask_filename)
 
             with tb.open_file(str(mask_filename), 'r') as in_file_h5:
                 mask_tdac = in_file_h5.root.scan_results.tdac_mask[:]

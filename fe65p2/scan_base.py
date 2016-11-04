@@ -115,11 +115,11 @@ class ScanBase(object):
         #temp and power log
         if self.scan_id != "status_scan":
             logname = 'reg_'+str(self.scan_id)+'.dat'
-            vth1=0
+            vth1=0.0
             if self.scan_id == "noise_scan":
-                vth1=self.vth1Dac
+                vth1=self.final_vth1
 
-            legend = "Time \t Scan \t Temp(C) \t Dig[mA] \t Ana[mA] \t Aux[mA] \t Dig[V] \t vth1 \n"
+            legend = "Time \t Temp(C) \t Dig[mA] \t Ana[mA] \t Aux[mA] \t Dig[V] \t vth1 \n"
             if not os.path.exists("./temp_log.txt"):
                  with open(logname, "a") as t_file:
                     t_file.write(legend)

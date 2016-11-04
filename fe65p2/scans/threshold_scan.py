@@ -29,7 +29,7 @@ local_configuration = {
 #   thrs scan
     "mask_steps":4,
     "repeat_command":100,
-    "scan_range":[0.1, 0.6, 0.01],
+    "scan_range":[0.05, 0.15, 0.005],
     "mask_filename":'',
     "TDAC":16
 }

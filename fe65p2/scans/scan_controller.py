@@ -55,7 +55,7 @@ def noise_sc():
     noise_sc.dut.close()
     return noise_mask_file
 
-def thresh_sc(noise_mask_file=''):
+def thresh_sc_unt(noise_mask_file=''):
     logging.info("Starting Threshold Scan")
     thrs_sc = ThresholdScan()
     thrs_mask_file = thrs_sc.output_filename
@@ -63,7 +63,26 @@ def thresh_sc(noise_mask_file=''):
     custom_conf = {
         "mask_steps": 4,
         "repeat_command": 100,
-        "scan_range": [0.01, 0.6, 0.01], #[0.0, 0.6, 0.01],
+        "scan_range": [0.05, 0.6, 0.01], #[0.0, 0.6, 0.01],
+        "mask_filename": noise_mask_file,
+        "TDAC" : 16
+    }
+
+    scan_conf = dict(par_conf, **custom_conf)
+    thrs_sc.start(**scan_conf)
+    thrs_sc.analyze()
+    thrs_sc.dut.close()
+    return thrs_mask_file
+
+def thresh_sc_tuned(noise_mask_file=''):
+    logging.info("Starting Threshold Scan")
+    thrs_sc = ThresholdScan()
+    thrs_mask_file = thrs_sc.output_filename
+    #thrs_sc.output_filename="tuned_"+thrs_sc.output_filename
+    custom_conf = {
+        "mask_steps": 4,
+        "repeat_command": 100,
+        "scan_range": [0.05, 0.15, 0.005], #[0.0, 0.6, 0.01],
         "mask_filename": noise_mask_file,
         "TDAC" : 16
     }
@@ -214,7 +233,7 @@ if __name__ == "__main__":
         os.chdir(dir)
         digi_shmoo_sc_data()
         os.chdir('..')
-        '''
+
         print '*** PIX REG SCAN ***'
         dir = os.path.join(os.getcwd(), "PIX_shmoo")
         if not os.path.exists(dir):
@@ -232,7 +251,7 @@ if __name__ == "__main__":
         os.chdir(dir)
         digi_sc()
         os.chdir('..')
-
+        '''
         for i in range(1,9):
             cols = [False]*16
             j=2*i-1
@@ -244,11 +263,11 @@ if __name__ == "__main__":
                 os.makedirs(col_dir)
             os.chdir(col_dir)
 
-            thrs_mask = thresh_sc('')
+            thrs_mask = thresh_sc_unt('')
             time.sleep(1)
             noise_masks = noise_sc()
             time.sleep(1)
-            thrs_mask = thresh_sc(noise_masks)
+            thrs_mask = thresh_sc_tuned(noise_masks)
 
             os.chdir('..')
 

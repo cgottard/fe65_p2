@@ -63,14 +63,14 @@ def thresh_sc(noise_mask_file=''):
     custom_conf = {
         "mask_steps": 4,
         "repeat_command": 100,
-        "scan_range": [0.2, 0.5, 0.1], #[0.0, 0.6, 0.01],
+        "scan_range": [0.01, 0.6, 0.01], #[0.0, 0.6, 0.01],
         "mask_filename": noise_mask_file,
         "TDAC" : 16
     }
 
     scan_conf = dict(par_conf, **custom_conf)
     thrs_sc.start(**scan_conf)
-    #thrs_sc.analyze()
+    thrs_sc.analyze()
     thrs_sc.dut.close()
     return thrs_mask_file
 
@@ -144,6 +144,7 @@ def digi_shmoo_sc_data():
 def pix_reg_sc():
     pix_reg = proofread_scan(fe65p2_path+"/fe65p2/fe65p2.yaml")
     pix_reg.scan(**par_conf)
+    pix_reg.shmoo_plotting()
     pix_reg.dut.close()
 
 
@@ -180,8 +181,8 @@ if __name__ == "__main__":
 
     #logging.basicConfig(filename='example.log', filemode='w', level=logging.DEBUG)
     for keys,values in par_conf.items():
-        print(keys)
-        print(values)
+        print keys, values
+
     logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - [%(levelname)-8s] (%(threadName)-10s) %(message)s")
     os.chdir(storage_dir)
 
@@ -243,13 +244,10 @@ if __name__ == "__main__":
                 os.makedirs(col_dir)
             os.chdir(col_dir)
 
-            #thrs_mask = thresh_sc('')
-            #time.sleep(1)
-            #here print vth1 and other thresholds, also to .log file
-            noise_masks = noise_sc()
-
+            thrs_mask = thresh_sc('')
             time.sleep(1)
-            # here print vth1 and other thresholds, also to .log file
+            noise_masks = noise_sc()
+            time.sleep(1)
             thrs_mask = thresh_sc(noise_masks)
 
             os.chdir('..')

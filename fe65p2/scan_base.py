@@ -35,7 +35,7 @@ class ScanBase(object):
         self.working_dir = os.getcwd() #os.path.join(os.getcwd(), "output_data")
 #        if not os.path.exists(self.working_dir):
 #            os.makedirs(self.working_dir)
-
+        self.final_vth1 = -99
         self.run_name = time.strftime("%Y%m%d_%H%M%S_") + self.scan_id
         self.output_filename = os.path.join(self.working_dir, self.run_name)
 
@@ -115,12 +115,10 @@ class ScanBase(object):
         #temp and power log
         if self.scan_id != "status_scan":
             logname = 'reg_'+str(self.scan_id)+'.dat'
-            vth1=0.0
-            if self.scan_id == "noise_scan":
-                vth1=self.final_vth1
+            vth1=self.final_vth1
 
             legend = "Time \t Temp(C) \t Dig[mA] \t Ana[mA] \t Aux[mA] \t Dig[V] \t vth1 \n"
-            if not os.path.exists("./temp_log.txt"):
+            if not os.path.exists("./"+logname):
                  with open(logname, "a") as t_file:
                     t_file.write(legend)
             t_log = time.strftime("%d-%b-%H:%M:%S")+"\t"+str(temp)+"\t"+str(pw['VDDD[mA]'])+"\t"+str(pw['VDDA[mA]'])+"\t"+str(pw['VAUX[mA]'])+"\t"+str(pw['VDDD[V]'])+str(vth1)+"\n"

@@ -24,7 +24,7 @@ local_configuration = {
     "PrmpVbnFolDac":51,
     "vbnLccDac":1,
     "compVbnDac":25,
-    "preCompVbnDac":50,
+    "preCompVbnDac":110,
 
 #   thrs scan
     "mask_steps":4,

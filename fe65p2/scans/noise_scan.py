@@ -37,7 +37,6 @@ class NoiseScan(ScanBase):
     def __init__(self):
         super(NoiseScan, self).__init__()
         self.vth1Dac = 0
-        self.final_vth1=0
 
     def scan(self, columns=[True] * 16, stop_pixel_count=4, repeats=100000, **kwargs):
         '''Scan loop

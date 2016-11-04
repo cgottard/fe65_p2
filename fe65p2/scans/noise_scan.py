@@ -15,12 +15,12 @@ from progressbar import ProgressBar
 import os
 
 local_configuration = {
-    "columns": [True]*1 +[False]*15,
+    "columns": [True]*2 +[False]*14,
     "stop_pixel_count": 4,
-    "repeats" : 100000,
+    "repeats" : 1000,
     #pars
     "PrmpVbpDac": 36,
-    "vthin1Dac": 255,
+    "vthin1Dac": 100,
     "vthin2Dac": 0,
     "vffDac" : 24,
     "PrmpVbnFolDac" : 51,
@@ -221,7 +221,7 @@ class NoiseScan(ScanBase):
         scan_results = self.h5_file.create_group("/", 'scan_results', 'Scan Results')
         self.h5_file.createCArray(scan_results, 'tdac_mask', obj=mask_tdac)
         self.h5_file.createCArray(scan_results, 'en_mask', obj=mask_en)
-        logging.info('Final vthin1Dac value: ',self.vth1Dac)
+        logging.info('Final vthin1Dac value: %s', str(self.vth1Dac))
 
     def analyze(self):
         h5_filename = self.output_filename + '.h5'

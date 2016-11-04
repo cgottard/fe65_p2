@@ -95,14 +95,14 @@ class ScanBase(object):
 
         self.dut['control']['RESET'] = 0b10
         self.dut['control'].write()
-
-        logging.info('Power Status: %s', str(self.dut.power_status()))
+        pw=self.dut.power_status()
+        logging.info('Power Status: %s', str(pw))
 
         self.scan(**kwargs)
 
         self.fifo_readout.print_readout_status()
 
-        self.meta_data_table.attrs.power_status = yaml.dump(self.dut.power_status())
+        self.meta_data_table.attrs.power_status = yaml.dump(pw)
         self.meta_data_table.attrs.dac_status = yaml.dump(self.dut.dac_status())
 
         #temperature
@@ -112,9 +112,20 @@ class ScanBase(object):
         self.h5_file.close()
         logging.info('Data Output Filename: %s', self.output_filename + '.h5')
 
-        t_log = time.strftime("%d-%b-%H:%M:%S")+"\t"+str(temp)+"\t"+self.scan_id+"\n"
-        with open("temp_log.txt", "a") as t_file:
-             t_file.write(t_log)
+        #temp and power log
+        if self.scan_id != "status_scan":
+            logname = 'reg_'+str(self.scan_id)+'.dat'
+            vth1=0
+            if self.scan_id == "noise_scan":
+                vth1=self.vth1Dac
+
+            legend = "Time \t Scan \t Temp(C) \t Dig[mA] \t Ana[mA] \t Aux[mA] \t Dig[V] \t vth1 \n"
+            if not os.path.exists("./temp_log.txt"):
+                 with open(logname, "a") as t_file:
+                    t_file.write(legend)
+            t_log = time.strftime("%d-%b-%H:%M:%S")+"\t"+str(temp)+"\t"+str(pw['VDDD[mA]'])+"\t"+str(pw['VDDA[mA]'])+"\t"+str(pw['VAUX[mA]'])+"\t"+str(pw['VDDD[V]'])+str(vth1)+"\n"
+            with open(logname, "a") as t_file:
+                 t_file.write(t_log)
 
 
         logger.removeHandler(fh)

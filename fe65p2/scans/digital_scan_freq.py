@@ -34,7 +34,7 @@ class MetaTable(tb.IsDescription):
 local_configuration = {
     "mask_steps": 4,
     "repeat_command": 100,
-    "scan_type" : 'cmd'
+    "scan_type" : 'data'
 }
 
 '''
@@ -286,6 +286,7 @@ class DigitalScanFreq(object):
                     self.dut['trigger'].set_en(False)
 
                     #self.fifo_readout.print_readout_status()
+
                 time.sleep(1)
                 self.meta_data_table.attrs.power_status = yaml.dump(self.dut.power_status())
                 self.meta_data_table.attrs.dac_status = yaml.dump(self.dut.dac_status())
@@ -294,6 +295,7 @@ class DigitalScanFreq(object):
                 self.analyze()
                 self.dut.power_down()
                 time.sleep(2)
+
         self.shmoo_plotting()
 
 

@@ -6,6 +6,7 @@ from fe65p2.scans.timewalk_scan import TimewalkScan
 from fe65p2.scans.analog_scan import AnalogScan
 from fe65p2.scans.proofread_scan import proofread_scan
 from fe65p2.scan_base import ScanBase
+import fe65p2.plotting as  plotting
 import os
 import sys
 import yaml
@@ -58,7 +59,7 @@ def thresh_sc(noise_mask_file=''):
     custom_conf = {
         "mask_steps": 4,
         "repeat_command": 100,
-        "scan_range": [0.6, 0.7, 0.1], #[0.0, 0.6, 0.01],
+        "scan_range": [0.2, 0.5, 0.1], #[0.0, 0.6, 0.01],
         "mask_filename": noise_mask_file,
         "TDAC" : 16
     }
@@ -73,7 +74,7 @@ def digi_sc():
     logging.info("Starting Digital Scan")
     digital_sc = DigitalScan()
     custom_conf = {
-        "mask_steps": 4*64,
+        "mask_steps": 4,
         "repeat_command": 100
     }
 
@@ -144,24 +145,25 @@ def pix_reg_sc():
 
 
 class status_sc(ScanBase):
-    scan_id = "digital_scan"
+    scan_id = "status_scan"
 
-    def print_status(self, **kwargs):
-        self.dut['global_conf']['PrmpVbpDac'] = kwargs['PrmpVbpDac']
-        self.dut['global_conf']['vthin1Dac'] = kwargs['vthin1Dac']
-        self.dut['global_conf']['vthin2Dac'] = kwargs['vthin2Dac']
-        self.dut['global_conf']['vffDac'] = kwargs['vffDac']
-        self.dut['global_conf']['PrmpVbnFolDac'] = kwargs['PrmpVbnFolDac']
-        self.dut['global_conf']['vbnLccDac'] = kwargs['vbnLccDac']
-        self.dut['global_conf']['compVbnDac'] = kwargs['compVbnDac']
-        self.dut['global_conf']['preCompVbnDac'] = kwargs['preCompVbnDac']
+    def load_bit(self):
+        self.dut['intf']._sidev.DownloadXilinx("/home/carlo/fe65_p2/firmware/ise/fe65p2_mio.bit")
         self.dut['VDDA'].set_current_limit(200, unit='mA')
         self.dut['VDDA'].set_voltage(1.2, unit='V')
         self.dut['VDDA'].set_enable(True)
         self.dut['VDDD'].set_voltage(1.2, unit='V')
         self.dut['VDDD'].set_enable(True)
-        self.dut['VAUX'].set_voltage(1.5, unit='V')
+        self.dut['VAUX'].set_voltage(1.2, unit='V')
         self.dut['VAUX'].set_enable(True)
+        self.dut['global_conf']['PrmpVbpDac'] = 36
+        self.dut['global_conf']['vthin1Dac'] = 255
+        self.dut['global_conf']['vthin2Dac'] = 0
+        self.dut['global_conf']['vffDac'] = 24
+        self.dut['global_conf']['PrmpVbnFolDac'] = 51
+        self.dut['global_conf']['vbnLccDac'] = 1
+        self.dut['global_conf']['compVbnDac'] = 25
+        self.dut['global_conf']['preCompVbnDac'] = 50
         logging.info('Power Status: %s', str(self.dut.power_status()))
         logging.info('DAC Status: %s', str(self.dut.dac_status()))
         self.dut['ntc'].get_temperature('C')
@@ -185,19 +187,47 @@ if __name__ == "__main__":
     os.chdir(working_dir)
 
     for c in cycle(range(0,2)): #goes on forever
-
         #for just 1 iteration
-        if c==1: break
+        #if c==1: break
         #column independent scans
-        print '*** CMD SCAN ***'
-        digi_shmoo_sc_cmd()
-        print '*** DATA SCAN ***'
-        digi_shmoo_sc_data()
-        print '*** PIX REG SCAN ***'
-        pix_reg_sc()
 
-        for i in cycle(range(1,9)):
-            print 'col ', i
+        print '*** CMD SCAN ***'
+        loadbit = status_sc()
+        loadbit.load_bit()
+
+        dir = os.path.join(os.getcwd(), "CMD_shmoo")
+        if not os.path.exists(dir):
+            os.makedirs(dir)
+        os.chdir(dir)
+        digi_shmoo_sc_cmd()
+        os.chdir('..')
+
+        print '*** DATA SCAN ***'
+        dir = os.path.join(os.getcwd(), "DATA_shmoo")
+        if not os.path.exists(dir):
+            os.makedirs(dir)
+        os.chdir(dir)
+        digi_shmoo_sc_data()
+        os.chdir('..')
+        print '*** PIX REG SCAN ***'
+        dir = os.path.join(os.getcwd(), "PIX_shmoo")
+        if not os.path.exists(dir):
+            os.makedirs(dir)
+        os.chdir(dir)
+        pix_reg_sc()
+        os.chdir('..')
+
+        print '*** DIGI SCAN ***'
+        loadbit = status_sc()
+        loadbit.load_bit()
+        dir = os.path.join(os.getcwd(), "DIGI_scan")
+        if not os.path.exists(dir):
+            os.makedirs(dir)
+        os.chdir(dir)
+        digi_sc()
+        os.chdir('..')
+
+        for i in range(1,9):
             cols = [False]*16
             j=2*i-1
             cols[j-1]=True
@@ -208,15 +238,15 @@ if __name__ == "__main__":
                 os.makedirs(col_dir)
             os.chdir(col_dir)
 
-            digi_sc()
-            thrs_mask = thresh_sc('')
-            time.sleep(1)
+            #thrs_mask = thresh_sc('')
+            #time.sleep(1)
             #here print vth1 and other thresholds, also to .log file
             noise_masks = noise_sc()
 
             time.sleep(1)
             # here print vth1 and other thresholds, also to .log file
             thrs_mask = thresh_sc(noise_masks)
+
             os.chdir('..')
 
 

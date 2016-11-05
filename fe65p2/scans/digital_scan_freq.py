@@ -66,7 +66,7 @@ class DigitalScanFreq(object):
         self.dut['global_conf']['PrmpVbnFolDac'] = 51
         self.dut['global_conf']['vbnLccDac'] = 1
         self.dut['global_conf']['compVbnDac'] = 25
-        self.dut['global_conf']['preCompVbnDac'] = 110
+        self.dut['global_conf']['preCompVbnDac'] = 50
         self.dut['global_conf']['Latency'] = 400
         # chip['global_conf']['ColEn'][0] = 1
         self.dut['global_conf']['ColEn'].setall(True)
@@ -148,8 +148,9 @@ class DigitalScanFreq(object):
             Number of injections.
         '''
 
-        scan_path = os.path.dirname(os.path.realpath(sys.argv[0]))
-        path = scan_path.replace('fe65p2/scans', 'firmware/bits/')
+        #scan_path = os.path.dirname(os.path.realpath(sys.argv[0]))
+        #path = scan_path.replace('fe65p2/scans', 'firmware/bits/')
+        path="/home/topcoup/Applications/fe65_p2/firmware/bits/"
         self.scantype = kwargs['scan_type']
 
         if self.scantype == 'cmd':
@@ -167,7 +168,7 @@ class DigitalScanFreq(object):
             self.bitfiles = OrderedDict(
                 [(40, "fe65p2_mio_DATA40.bit"), (60, "fe65p2_mio_DATA60.bit"), (80, "fe65p2_mio_DATA80.bit"),
                  (100, "fe65p2_mio_DATA100.bit"), (120, "fe65p2_mio_DATA120.bit"), (160, "fe65p2_mio_DATA160.bit")])
-        self.voltages = [1.2, 1.1, 1.0, 0.95, 0.90]
+        self.voltages = [1.25, 1.2, 1.1, 1.0, 0.95, 0.90]
         self.not_fired = []
         for freq in self.bitfiles.iterkeys():
             self.dut.power_down()
@@ -192,7 +193,7 @@ class DigitalScanFreq(object):
                 self.dut['global_conf']['PrmpVbnFolDac'] = kwargs['PrmpVbnFolDac']
                 self.dut['global_conf']['vbnLccDac'] = kwargs['vbnLccDac']
                 self.dut['global_conf']['compVbnDac'] = kwargs['compVbnDac']
-                self.dut['global_conf']['preCompVbnDac'] = kwargs['preCompVbnDac']
+                self.dut['global_conf']['preCompVbnDac'] = 50
 
 
                 logging.info(self.dut.power_status())  # prints power supply

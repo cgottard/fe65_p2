@@ -50,19 +50,19 @@ class proofread_scan(ScanBase):
         self.dut['global_conf']['PrmpVbpDac'] = kwargs['PrmpVbpDac']
         self.dut['global_conf']['vthin1Dac'] = kwargs['vthin1Dac']
         self.dut['global_conf']['vthin2Dac'] = kwargs['vthin2Dac']
-        self.dut['global_conf']['vffDac'] = kwargs['vffDac']
+        self.dut['global_conf']['vffDac'] = 42
         self.dut['global_conf']['PrmpVbnFolDac'] = kwargs['PrmpVbnFolDac']
         self.dut['global_conf']['vbnLccDac'] = kwargs['vbnLccDac']
         self.dut['global_conf']['compVbnDac'] = kwargs['compVbnDac']
-        self.dut['global_conf']['preCompVbnDac'] = kwargs['preCompVbnDac']
+        self.dut['global_conf']['preCompVbnDac'] = 50
 
-        scan_path = os.path.dirname(os.path.realpath(sys.argv[0]))
-        path = scan_path.replace('fe65p2/scans','firmware/bits/goodSPI_bits/')
-
+        #scan_path = os.path.dirname(os.path.realpath(sys.argv[0]))
+        #path = scan_path.replace('fe65p2/scans','firmware/bits/goodSPI_bits/')
+        path = "/home/topcoup/Applications/fe65_p2/firmware/bits/goodSPI_bits/"
         self.bitfiles = ["fe65p2_mio_3MHz.bit", "fe65p2_mio_4MHz.bit", "fe65p2_mio_6MHz.bit",
                          "fe65p2_mio_8MHz.bit", "fe65p2_mio_12MHz.bit", "fe65p2_mio_16MHz.bit",
                          "fe65p2_mio_24MHz.bit", "fe65p2_mio_32MHz.bit"]
-        self.voltages = [1.2, 1.1, 1.0, 0.95, 0.90]
+        self.voltages = [1.25, 1.2, 1.1, 1.0, 0.95, 0.90]
 
         self.shmoo_errors = []
         self.shmoo_global_errors = []
@@ -87,17 +87,17 @@ class proofread_scan(ScanBase):
                 self.dut['VDDA'].set_enable(True)
                 self.dut['VDDD'].set_voltage(volt, unit='V')
                 self.dut['VDDD'].set_enable(True)
-                self.dut['VAUX'].set_voltage(1.5, unit='V')
+                self.dut['VAUX'].set_voltage(1.25, unit='V')
                 self.dut['VAUX'].set_enable(True)
                 # global reg
                 self.dut['global_conf']['PrmpVbpDac'] = kwargs['PrmpVbpDac']
                 self.dut['global_conf']['vthin1Dac'] = kwargs['vthin1Dac']
                 self.dut['global_conf']['vthin2Dac'] = kwargs['vthin2Dac']
-                self.dut['global_conf']['vffDac'] = kwargs['vffDac']
-                self.dut['global_conf']['PrmpVbnFolDac'] = kwargs['PrmpVbnFolDac']
-                self.dut['global_conf']['vbnLccDac'] = kwargs['vbnLccDac']
+                self.dut['global_conf']['vffDac'] = 42
+                self.dut['global_conf']['PrmpVbnFolDac'] = 51
+                self.dut['global_conf']['vbnLccDac'] = 51
                 self.dut['global_conf']['compVbnDac'] = kwargs['compVbnDac']
-                self.dut['global_conf']['preCompVbnDac'] = kwargs['preCompVbnDac']
+                self.dut['global_conf']['preCompVbnDac'] = 50
 
                 self.dut['global_conf']['OneSr'] = 1
                 self.dut['global_conf']['SPARE'] = 0  # added by me, default 0

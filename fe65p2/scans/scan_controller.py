@@ -17,8 +17,8 @@ from itertools import cycle
 import logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(filename)s - [%(levelname)-8s] (%(threadName)-10s) %(message)s")
 
-fe65p2_path="/home/carlo/fe65_p2"
-storage_dir="/media/carlo/1 TB/"
+fe65p2_path="/home/topcoup/Applications/fe65_p2"
+storage_dir="/media/topcoup/TB/"
 
 par_conf = {
     "columns": [True] * 16,
@@ -121,7 +121,7 @@ def timewalk_sc(noise_mask, th_mask, pix_list):
     custom_conf = {
         "mask_steps" : 4,
         "repeat_command" : 101,
-        "scan_range" : [0.01, 0.2, 0.01],
+        "scan_range" : [0.05, 0.6, 0.01],
         "noise_mask" : noise_mask,
         "mask_filename":th_mask,
         "pix_list":pix_list
@@ -136,7 +136,7 @@ def timewalk_sc(noise_mask, th_mask, pix_list):
 
 def digi_shmoo_sc_cmd():
     digi_shmoo = DigitalScanFreq(None)
-    digi_shmoo.plots=False
+    digi_shmoo.plots=True
     custom_conf = {
 
         "mask_steps": 4,
@@ -226,11 +226,9 @@ if __name__ == "__main__":
         #for just 1 iteration
         if c==1: break
         #column independent scans
-        '''
+        time.sleep(0.2)
+        
         print '*** CMD SCAN ***'
-        loadbit = status_sc()
-        loadbit.load_bit()
-
         dir = os.path.join(os.getcwd(), "CMD_shmoo")
         if not os.path.exists(dir):
             os.makedirs(dir)
@@ -238,6 +236,7 @@ if __name__ == "__main__":
         digi_shmoo_sc_cmd()
         os.chdir('..')
 
+        time.sleep(0.2)
         print '*** DATA SCAN ***'
         dir = os.path.join(os.getcwd(), "DATA_shmoo")
         if not os.path.exists(dir):
@@ -245,7 +244,8 @@ if __name__ == "__main__":
         os.chdir(dir)
         digi_shmoo_sc_data()
         os.chdir('..')
-
+        
+        time.sleep(0.2)
         print '*** PIX REG SCAN ***'
         dir = os.path.join(os.getcwd(), "PIX_shmoo")
         if not os.path.exists(dir):
@@ -254,6 +254,7 @@ if __name__ == "__main__":
         pix_reg_sc()
         os.chdir('..')
 
+        time.sleep(0.5)
         print '*** DIGI SCAN ***'
         loadbit = status_sc()
         loadbit.load_bit()
@@ -264,10 +265,12 @@ if __name__ == "__main__":
         digi_sc()
         os.chdir('..')
 
+        time.sleep(0.5)
         re_loadbit = status_sc()
         re_loadbit.load_bit()
-        '''
-        for i in range(1,2):
+        time.sleep(0.5)
+
+        for i in range(1,9):
             cols = [False]*16
             j=2*i-1
             cols[j-1]=True

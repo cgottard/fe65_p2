@@ -62,7 +62,7 @@ class proofread_scan(ScanBase):
         self.bitfiles = ["fe65p2_mio_3MHz.bit", "fe65p2_mio_4MHz.bit", "fe65p2_mio_6MHz.bit",
                          "fe65p2_mio_8MHz.bit", "fe65p2_mio_12MHz.bit", "fe65p2_mio_16MHz.bit",
                          "fe65p2_mio_24MHz.bit", "fe65p2_mio_32MHz.bit"]
-        self.voltages = [1.4, 1.3, 1.2, 1.15, 1.1, 1.0, 0.95, 0.90]
+        self.voltages = [1.2, 1.1, 1.0, 0.95, 0.90]
 
         self.shmoo_errors = []
         self.shmoo_global_errors = []

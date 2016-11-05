@@ -59,7 +59,6 @@ class DigitalScanFreq(object):
 #        self.dut['control'].write()
 
         time.sleep(0.1)
-        #TODO: try to put kwargs here
         self.dut['global_conf']['PrmpVbpDac'] = 36
         self.dut['global_conf']['vthin1Dac'] = 255
         self.dut['global_conf']['vthin2Dac'] = 0
@@ -160,8 +159,7 @@ class DigitalScanFreq(object):
             self.bitfiles = OrderedDict(
                 [(20, "fe65p2_mio_CMD20.bit"), (30, "fe65p2_mio_CMD30.bit"), (40, "fe65p2_mio_CMD40.bit"),
                  (50, "fe65p2_mio_CMD50.bit"), (60, "fe65p2_mio_CMD60.bit"), (70, "fe65p2_mio_CMD70.bit"),
-                 (80, "fe65p2_mio_CMD80.bit"), (90, "fe65p2_mio_CMD90.bit"), (100, "fe65p2_mio_CMD100.bit"),
-                 (110, "fe65p2_mio_CMD110.bit")])  # , (130,"fe65p2_mio_CMD130.bit"), (140,"fe65p2_mio_CMD140.bit"), (150,"fe65p2_mio_CMD150.bit"),  (160,"fe65p2_mio_CMD160.bit")])
+                 (80, "fe65p2_mio_CMD80.bit"), (90, "fe65p2_mio_CMD90.bit"), (100, "fe65p2_mio_CMD100.bit")])  # , (130,"fe65p2_mio_CMD130.bit"), (140,"fe65p2_mio_CMD140.bit"), (150,"fe65p2_mio_CMD150.bit"),  (160,"fe65p2_mio_CMD160.bit")])
 
         if self.scantype == 'data':
             self.clock_name = 'DATA clock'
@@ -169,13 +167,14 @@ class DigitalScanFreq(object):
             self.bitfiles = OrderedDict(
                 [(40, "fe65p2_mio_DATA40.bit"), (60, "fe65p2_mio_DATA60.bit"), (80, "fe65p2_mio_DATA80.bit"),
                  (100, "fe65p2_mio_DATA100.bit"), (120, "fe65p2_mio_DATA120.bit"), (160, "fe65p2_mio_DATA160.bit")])
-        self.voltages = [1.2, 1.0, 0.95, 0.90]
+        self.voltages = [1.2, 1.1, 1.0, 0.95, 0.90]
         self.not_fired = []
         for freq in self.bitfiles.iterkeys():
             self.dut.power_down()
             logging.info("Loading " + self.bitfiles[freq])  # loading bitfile
             self.dut['intf']._sidev.DownloadXilinx(path + self.bitfiles[freq])
             self.dut.power_up()
+
             for volt in self.voltages:
                 # to change the supply voltage
                 self.dut['VDDA'].set_current_limit(200, unit='mA')
@@ -185,6 +184,17 @@ class DigitalScanFreq(object):
                 self.dut['VDDD'].set_enable(True)
                 self.dut['VAUX'].set_voltage(1.25, unit='V')
                 self.dut['VAUX'].set_enable(True)
+
+                self.dut['global_conf']['PrmpVbpDac'] = kwargs['PrmpVbpDac']
+                self.dut['global_conf']['vthin1Dac'] = kwargs['vthin1Dac']
+                self.dut['global_conf']['vthin2Dac'] = kwargs['vthin2Dac']
+                self.dut['global_conf']['vffDac'] = kwargs['vffDac']
+                self.dut['global_conf']['PrmpVbnFolDac'] = kwargs['PrmpVbnFolDac']
+                self.dut['global_conf']['vbnLccDac'] = kwargs['vbnLccDac']
+                self.dut['global_conf']['compVbnDac'] = kwargs['compVbnDac']
+                self.dut['global_conf']['preCompVbnDac'] = kwargs['preCompVbnDac']
+
+
                 logging.info(self.dut.power_status())  # prints power supply
                 self.run_name = time.strftime("%Y%m%d_%H%M%S_") + "_" + str(freq) + "MHz_" + str(volt) + "V"
                 self.output_filename = os.path.join(self.working_dir, str(self.scantype)+'_'+str(self.run_name))

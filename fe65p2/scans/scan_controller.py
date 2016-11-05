@@ -58,6 +58,7 @@ def noise_sc():
 def thresh_sc_unt(noise_mask_file=''):
     logging.info("Starting Threshold Scan")
     thrs_sc = ThresholdScan()
+    thrs_sc.scan_id = "thrs_scan_unt"
     thrs_mask_file = thrs_sc.output_filename
 
     custom_conf = {
@@ -77,8 +78,8 @@ def thresh_sc_unt(noise_mask_file=''):
 def thresh_sc_tuned(noise_mask_file=''):
     logging.info("Starting Threshold Scan")
     thrs_sc = ThresholdScan()
+    thrs_sc.scan_id = "thrs_scan_tu"
     thrs_mask_file = thrs_sc.output_filename
-    #thrs_sc.output_filename="tuned_"+thrs_sc.output_filename
     custom_conf = {
         "mask_steps": 4,
         "repeat_command": 100,
@@ -119,14 +120,16 @@ def analog_sc():
     ana_sc.analyze()
     ana_sc.dut.close()
 
-def timewalk_sc(mask):
+def timewalk_sc(noise_mask, th_mask, pix_list):
     time_sc = TimewalkScan()
     custom_conf = {
-        "mask_steps": 4,
-        "repeat_command": 100,
-        "scan_range": [0.6, 0.7, 0.1], #[0.0, 0.6, 0.01],
-        "mask_filename": mask,   #from noise or threshold?
-        "TDAC" : 16
+        "mask_steps" : 4,
+        "repeat_command" : 100,
+        "scan_range" : [0.05, 0.5, 0.05], #[0.0, 0.6, 0.01],
+        "noise_mask" : noise_mask,
+        "mask_filename":th_mask,
+        "TDAC" : 16,
+        "pix_list":pix_list
     }
     scan_conf = dict(par_conf, **custom_conf)
     time_sc.start(**scan_conf)
@@ -145,7 +148,7 @@ def digi_shmoo_sc_cmd():
         "scan_type" : 'cmd'
     }
     scan_conf = dict(par_conf, **custom_conf)
-    digi_shmoo.scan(**custom_conf)
+    digi_shmoo.scan(**scan_conf)
     digi_shmoo.dut.close()
 
 def digi_shmoo_sc_data():
@@ -157,7 +160,7 @@ def digi_shmoo_sc_data():
         "scan_type" : 'data'
     }
     scan_conf = dict(par_conf, **custom_conf)
-    digi_shmoo.scan(**custom_conf)
+    digi_shmoo.scan(**scan_conf)
     digi_shmoo.dut.close()
 
 def pix_reg_sc():
@@ -192,6 +195,19 @@ class status_sc(ScanBase):
         logging.info('DAC Status: %s', str(self.dut.dac_status()))
         self.dut['ntc'].get_temperature('C')
         self.dut.close()
+
+def time_pixels(col):
+    lp = []
+    if col==1: lp=[(4,4),(6,2)]
+    if col==2: lp=[(12,12),(14,10)]
+    if col==3: lp=[(20,20),(22,18)]
+    if col==4: lp=[(28,28),(30,26)]
+    if col==5: lp=[(36,36),(38,34)]
+    if col==6: lp=[(44,44),(44,42)]
+    if col==7: lp=[(52,52),(54,50)]
+    if col==8: lp=[(60,60),(62,58)]
+    return lp
+
 
 
 
@@ -263,11 +279,14 @@ if __name__ == "__main__":
                 os.makedirs(col_dir)
             os.chdir(col_dir)
 
-            thrs_mask = thresh_sc_unt('')
-            time.sleep(1)
+            unt_thrs_mask = thresh_sc_unt('')
+            time.sleep(0.5)
             noise_masks = noise_sc()
-            time.sleep(1)
+            time.sleep(0.5)
             thrs_mask = thresh_sc_tuned(noise_masks)
+            time.sleep(0.5)
+            pixels = time_pixels(i)
+            timewalk_sc(noise_masks, thrs_mask, pixels)
 
             os.chdir('..')
 

@@ -10,6 +10,7 @@ import yaml
 from basil.dut import Dut
 import logging
 import math
+import os
 import itertools
 
 logging.basicConfig(level=logging.INFO,
@@ -27,7 +28,8 @@ local_configuration = {
     "scan_range": [0.1, 0.5, 0.05],
     "columns": [True] * 16 + [False] * 0,
     "mask_filename": '',
-    "pix_list": [(2,6), (2,3), (4,5), (11,12), (16, 18), (32, 32), (42,42), (50,50) ],
+    "noise_mask":'',
+    "pix_list": [(2,6), (2,3), (4,5)],
      #DAC parameters
     "PrmpVbpDac": 36,
     "vthin1Dac": 80,
@@ -57,6 +59,16 @@ class TimewalkScan(ScanBase):
         repeat : int
             Number of injections.
         '''
+        def load_vthin1Dac(mask):
+            if os.path.exists(mask):
+                in_file = tb.open_file(mask, 'r')
+                dac_status = yaml.load(in_file.root.meta_data.attrs.dac_status)
+                vthrs1 = dac_status['vthin1Dac'] + 3
+                print "Loaded vth1 from noise scan: ", vthrs1
+                return vthrs1
+            else: return 100
+
+
         inj_factor = 1.0
         INJ_LO = 0.0
         try:

@@ -121,7 +121,7 @@ class ScanBase(object):
             if not os.path.exists("./"+logname):
                  with open(logname, "a") as t_file:
                     t_file.write(legend)
-            t_log = time.strftime("%d-%b-%H:%M:%S")+"\t"+str(temp)+"\t"+str(pw['VDDD[mA]'])+"\t"+str(pw['VDDA[mA]'])+"\t"+str(pw['VAUX[mA]'])+"\t"+str(pw['VDDD[V]'])+str(vth1)+"\n"
+            t_log = time.strftime("%d-%b-%H:%M:%S")+"\t"+str(temp)+"\t"+str(pw['VDDD[mA]'])+"\t"+str(pw['VDDA[mA]'])+"\t"+str(pw['VAUX[mA]'])+"\t"+str(pw['VDDD[V]'])+"\t"+str(vth1)+"\n"
             with open(logname, "a") as t_file:
                  t_file.write(t_log)
 

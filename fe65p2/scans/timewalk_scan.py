@@ -26,10 +26,10 @@ local_configuration = {
     "mask_steps": 4,
     "repeat_command": 101,
     "scan_range": [0.1, 0.5, 0.05],
-    "columns": [True] * 16 + [False] * 0,
+    "columns": [True] * 2 + [False] * 14,
     "mask_filename": '',
     "noise_mask":'',
-    "pix_list": [(2,6), (2,3), (4,5)],
+    "pix_list": [(2,6), (2,3)],
      #DAC parameters
     "PrmpVbpDac": 36,
     "vthin1Dac": 80,
@@ -64,11 +64,11 @@ class TimewalkScan(ScanBase):
                 in_file = tb.open_file(mask, 'r')
                 dac_status = yaml.load(in_file.root.meta_data.attrs.dac_status)
                 vthrs1 = dac_status['vthin1Dac'] + 3
-                print "Loaded vth1 from noise scan: ", vthrs1
+                logging.info("Loaded vth1 from noise scan: %s", str(vthrs1))
                 return vthrs1
-            else: return 100
+            else: return 80
 
-
+        vth1 = load_vthin1Dac(kwargs['noise_mask'])
         inj_factor = 1.0
         INJ_LO = 0.0
         try:
@@ -82,7 +82,7 @@ class TimewalkScan(ScanBase):
             self.dut['INJ_LO'].set_voltage(INJ_LO, unit='V')
 
         self.dut['global_conf']['PrmpVbpDac'] = kwargs['PrmpVbpDac']
-        self.dut['global_conf']['vthin1Dac'] = kwargs['vthin1Dac']
+        self.dut['global_conf']['vthin1Dac'] = vth1
         self.dut['global_conf']['vthin2Dac'] = kwargs['vthin2Dac']
         self.dut['global_conf']['vffDac'] = kwargs['vffDac']
         self.dut['global_conf']['PrmpVbnFolDac'] = kwargs['PrmpVbnFolDac']
@@ -195,7 +195,7 @@ class TimewalkScan(ScanBase):
                     self.dut.write_global()
                     time.sleep(0.1)
 
-                    self.dut['global_conf']['vthin1Dac'] = kwargs['vthin1Dac']
+                    self.dut['global_conf']['vthin1Dac'] = vth1
                     self.dut['global_conf']['vthin2Dac'] = kwargs['vthin2Dac']
                     self.dut['global_conf']['PrmpVbpDac'] = kwargs['PrmpVbpDac']
                     self.dut['global_conf']['preCompVbnDac'] = kwargs['preCompVbnDac']
@@ -213,12 +213,15 @@ class TimewalkScan(ScanBase):
                     self.dut['tdc'].ENABLE = 0
             p_counter += 1
 
+
     def tdc_table(self, scanrange):
         h5_filename = self.output_filename + '.h5'
         with tb.open_file(h5_filename, 'r+') as in_file_h5:
             raw_data = in_file_h5.root.raw_data[:]
             meta_data = in_file_h5.root.meta_data[:]
-            if (meta_data.shape[0] == 0): return
+            if (meta_data.shape[0] == 0):
+                print 'empty output'
+                return
             repeat_command = in_file_h5.root.meta_data.attrs.kwargs
             a = repeat_command.rfind("repeat_command: ")
             repeat_command = repeat_command[a + len("repeat_command: "):a + len("repeat_command: ") + 7]

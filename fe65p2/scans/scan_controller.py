@@ -1,5 +1,6 @@
 from fe65p2.scans.noise_scan import NoiseScan
 from fe65p2.scans.threshold_scan import ThresholdScan
+from fe65p2.scans.tu_threshold_scan import ThresholdScanTuned
 from fe65p2.scans.digital_scan import DigitalScan
 from fe65p2.scans.digital_scan_freq import DigitalScanFreq
 from fe65p2.scans.timewalk_scan import TimewalkScan
@@ -7,13 +8,14 @@ from fe65p2.scans.analog_scan import AnalogScan
 from fe65p2.scans.proofread_scan import proofread_scan
 from fe65p2.scan_base import ScanBase
 import fe65p2.plotting as  plotting
+import numpy as np
 import os
 import sys
 import yaml
 import time
 from itertools import cycle
 import logging
-
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(filename)s - [%(levelname)-8s] (%(threadName)-10s) %(message)s")
 
 fe65p2_path="/home/carlo/fe65_p2"
 storage_dir="/media/carlo/1 TB/"
@@ -39,7 +41,7 @@ par_string = "Prmp"+str(par_conf['PrmpVbpDac']) +"_vthA"+str(par_conf['vthin1Dac
 def noise_sc():
     logging.info("Starting Noise Scan")
     noise_sc = NoiseScan()
-    noise_mask_file = str(noise_sc.output_filename)+".h5"
+    noise_mask_file = str(noise_sc.output_filename)+'.h5'
 
     custom_conf = {
         "stop_pixel_count": 4,
@@ -49,8 +51,6 @@ def noise_sc():
     scan_conf = dict(par_conf, **custom_conf)
     noise_sc.start(**scan_conf)
     noise_sc.analyze()
-
-
     print noise_sc.vth1Dac
     noise_sc.dut.close()
     return noise_mask_file
@@ -58,9 +58,6 @@ def noise_sc():
 def thresh_sc_unt(noise_mask_file=''):
     logging.info("Starting Threshold Scan")
     thrs_sc = ThresholdScan()
-    thrs_sc.scan_id = "thrs_scan_unt"
-    thrs_mask_file = thrs_sc.output_filename
-
     custom_conf = {
         "mask_steps": 4,
         "repeat_command": 100,
@@ -72,25 +69,24 @@ def thresh_sc_unt(noise_mask_file=''):
     scan_conf = dict(par_conf, **custom_conf)
     thrs_sc.start(**scan_conf)
     thrs_sc.analyze()
+    thrs_mask_file = str(thrs_sc.output_filename)+'.h5'
     thrs_sc.dut.close()
     return thrs_mask_file
 
 def thresh_sc_tuned(noise_mask_file=''):
     logging.info("Starting Threshold Scan")
-    thrs_sc = ThresholdScan()
-    thrs_sc.scan_id = "thrs_scan_tu"
-    thrs_mask_file = thrs_sc.output_filename
+    thrs_sc = ThresholdScanTuned()
     custom_conf = {
         "mask_steps": 4,
         "repeat_command": 100,
-        "scan_range": [0.05, 0.15, 0.005], #[0.0, 0.6, 0.01],
+        "scan_range": [0.005, 0.15, 0.005], #[0.0, 0.6, 0.01],
         "mask_filename": noise_mask_file,
         "TDAC" : 16
     }
-
     scan_conf = dict(par_conf, **custom_conf)
     thrs_sc.start(**scan_conf)
     thrs_sc.analyze()
+    thrs_mask_file=str(thrs_sc.output_filename)+'.h5'
     thrs_sc.dut.close()
     return thrs_mask_file
 
@@ -124,16 +120,16 @@ def timewalk_sc(noise_mask, th_mask, pix_list):
     time_sc = TimewalkScan()
     custom_conf = {
         "mask_steps" : 4,
-        "repeat_command" : 100,
-        "scan_range" : [0.05, 0.5, 0.05], #[0.0, 0.6, 0.01],
+        "repeat_command" : 101,
+        "scan_range" : [0.01, 0.2, 0.01],
         "noise_mask" : noise_mask,
         "mask_filename":th_mask,
-        "TDAC" : 16,
         "pix_list":pix_list
     }
     scan_conf = dict(par_conf, **custom_conf)
+    scanrange=custom_conf["scan_range"]
     time_sc.start(**scan_conf)
-    time_sc.analyze()
+    time_sc.tdc_table(len(np.arange(scanrange[0], scanrange[1], scanrange[2]))+3)
     time_sc.dut.close()
 
 
@@ -201,11 +197,11 @@ def time_pixels(col):
     if col==1: lp=[(4,4),(6,2)]
     if col==2: lp=[(12,12),(14,10)]
     if col==3: lp=[(20,20),(22,18)]
-    if col==4: lp=[(28,28),(30,26)]
+    if col==4: lp=[(28,28),(30,31)]
     if col==5: lp=[(36,36),(38,34)]
     if col==6: lp=[(44,44),(44,42)]
-    if col==7: lp=[(52,52),(54,50)]
-    if col==8: lp=[(60,60),(62,58)]
+    if col==7: lp=[(49,49),(50,48)]
+    if col==8: lp=[(56,56),(58,58)]
     return lp
 
 
@@ -228,7 +224,7 @@ if __name__ == "__main__":
 
     for c in cycle(range(0,2)): #goes on forever
         #for just 1 iteration
-        #if c==1: break
+        if c==1: break
         #column independent scans
         '''
         print '*** CMD SCAN ***'
@@ -267,8 +263,11 @@ if __name__ == "__main__":
         os.chdir(dir)
         digi_sc()
         os.chdir('..')
+
+        re_loadbit = status_sc()
+        re_loadbit.load_bit()
         '''
-        for i in range(1,9):
+        for i in range(1,2):
             cols = [False]*16
             j=2*i-1
             cols[j-1]=True
@@ -285,9 +284,10 @@ if __name__ == "__main__":
             time.sleep(0.5)
             thrs_mask = thresh_sc_tuned(noise_masks)
             time.sleep(0.5)
+
             pixels = time_pixels(i)
             timewalk_sc(noise_masks, thrs_mask, pixels)
-
+            #timewalk_sc('', '', pixels)
             os.chdir('..')
 
 

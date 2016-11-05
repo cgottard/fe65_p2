@@ -106,8 +106,8 @@ class ScanBase(object):
         self.meta_data_table.attrs.dac_status = yaml.dump(self.dut.dac_status())
 
         #temperature
-        temp = str(self.dut['ntc'].get_temperature('C'))
-        self.meta_data_table.attrs.temp = yaml.dump(temp)
+        temp = self.dut['ntc'].get_temperature('C')
+        self.meta_data_table.attrs.temp = yaml.dump(str(temp))
 
         self.h5_file.close()
         logging.info('Data Output Filename: %s', self.output_filename + '.h5')
@@ -121,7 +121,8 @@ class ScanBase(object):
             if not os.path.exists("./"+logname):
                  with open(logname, "a") as t_file:
                     t_file.write(legend)
-            t_log = time.strftime("%d-%b-%H:%M:%S")+"\t"+str(temp)+"\t"+str(pw['VDDD[mA]'])+"\t"+str(pw['VDDA[mA]'])+"\t"+str(pw['VAUX[mA]'])+"\t"+str(pw['VDDD[V]'])+"\t"+str(vth1)+"\n"
+            temp_f="{:.2f}".format(temp)
+            t_log = time.strftime("%d-%b-%H:%M:%S")+"\t"+str(temp_f)+"\t"+str(pw['VDDD[mA]'])+"\t"+str(pw['VDDA[mA]'])+"\t"+str(pw['VAUX[mA]'])+"\t"+str(pw['VDDD[V]'])+"\t"+str(vth1)+"\n"
             with open(logname, "a") as t_file:
                  t_file.write(t_log)
 

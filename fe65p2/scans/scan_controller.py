@@ -270,7 +270,7 @@ if __name__ == "__main__":
         re_loadbit.load_bit()
         time.sleep(0.5)
 
-        for i in range(1,9):
+        for i in range(1,2):
             cols = [False]*16
             j=2*i-1
             cols[j-1]=True

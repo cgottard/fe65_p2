@@ -17,8 +17,8 @@ from itertools import cycle
 import logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(filename)s - [%(levelname)-8s] (%(threadName)-10s) %(message)s")
 
-fe65p2_path="/home/topcoup/Applications/fe65_p2"
-storage_dir="/media/topcoup/TB/"
+fe65p2_path="/home/user/Desktop/carlo/fe65_p2"
+storage_dir="/run/media/user/TB/"
 
 par_conf = {
     "columns": [True] * 16,
@@ -30,7 +30,7 @@ par_conf = {
     "PrmpVbnFolDac" : 51,   #not subject to change
     "vbnLccDac" : 1,        #not subject to change
     "compVbnDac":25,        #not subject to change
-    "preCompVbnDac" : 110,
+    "preCompVbnDac" : 110
 }
 
 #parameter folder name
@@ -61,7 +61,7 @@ def thresh_sc_unt(noise_mask_file=''):
     custom_conf = {
         "mask_steps": 4,
         "repeat_command": 100,
-        "scan_range": [0.05, 0.6, 0.01], #[0.0, 0.6, 0.01],
+        "scan_range": [0.2, 0.8, 0.01], #[0.0, 0.6, 0.01],
         "mask_filename": noise_mask_file,
         "TDAC" : 16
     }
@@ -79,7 +79,7 @@ def thresh_sc_tuned(noise_mask_file=''):
     custom_conf = {
         "mask_steps": 4,
         "repeat_command": 100,
-        "scan_range": [0.005, 0.15, 0.005], #[0.0, 0.6, 0.01],
+        "scan_range": [0.005, 0.25, 0.005], #[0.0, 0.6, 0.01],
         "mask_filename": noise_mask_file,
         "TDAC" : 16
     }
@@ -121,7 +121,7 @@ def timewalk_sc(noise_mask, th_mask, pix_list):
     custom_conf = {
         "mask_steps" : 4,
         "repeat_command" : 101,
-        "scan_range" : [0.05, 0.6, 0.01],
+        "scan_range" : [0.005, 0.25, 0.005],
         "noise_mask" : noise_mask,
         "mask_filename":th_mask,
         "pix_list":pix_list
@@ -136,7 +136,7 @@ def timewalk_sc(noise_mask, th_mask, pix_list):
 
 def digi_shmoo_sc_cmd():
     digi_shmoo = DigitalScanFreq(None)
-    digi_shmoo.plots=True
+    digi_shmoo.plots=False
     custom_conf = {
 
         "mask_steps": 4,
@@ -146,6 +146,7 @@ def digi_shmoo_sc_cmd():
     scan_conf = dict(par_conf, **custom_conf)
     digi_shmoo.scan(**scan_conf)
     digi_shmoo.dut.close()
+
 
 def digi_shmoo_sc_data():
     digi_shmoo = DigitalScanFreq(None)
@@ -194,8 +195,8 @@ class status_sc(ScanBase):
 
 def time_pixels(col):
     lp = []
-    if col==1: lp=[(4,4),(6,2)]
-    if col==2: lp=[(12,12),(14,10)]
+    if col==1: lp=[(2,6), (3,3)]
+    if col==2: lp=[(6,20),(14,10)]
     if col==3: lp=[(20,20),(22,18)]
     if col==4: lp=[(28,28),(30,31)]
     if col==5: lp=[(36,36),(38,34)]
@@ -226,7 +227,8 @@ if __name__ == "__main__":
         #for just 1 iteration
         if c==1: break
         #column independent scans
-        time.sleep(0.2)
+        '''
+        time.sleep(1)
         
         print '*** CMD SCAN ***'
         dir = os.path.join(os.getcwd(), "CMD_shmoo")
@@ -236,7 +238,7 @@ if __name__ == "__main__":
         digi_shmoo_sc_cmd()
         os.chdir('..')
 
-        time.sleep(0.2)
+        time.sleep(1)
         print '*** DATA SCAN ***'
         dir = os.path.join(os.getcwd(), "DATA_shmoo")
         if not os.path.exists(dir):
@@ -245,7 +247,7 @@ if __name__ == "__main__":
         digi_shmoo_sc_data()
         os.chdir('..')
         
-        time.sleep(0.2)
+        time.sleep(1)
         print '*** PIX REG SCAN ***'
         dir = os.path.join(os.getcwd(), "PIX_shmoo")
         if not os.path.exists(dir):
@@ -253,24 +255,21 @@ if __name__ == "__main__":
         os.chdir(dir)
         pix_reg_sc()
         os.chdir('..')
-
-        time.sleep(0.5)
+        
+        time.sleep(1)
         print '*** DIGI SCAN ***'
         loadbit = status_sc()
         loadbit.load_bit()
+        
         dir = os.path.join(os.getcwd(), "DIGI_scan")
         if not os.path.exists(dir):
             os.makedirs(dir)
         os.chdir(dir)
         digi_sc()
         os.chdir('..')
-
-        time.sleep(0.5)
-        re_loadbit = status_sc()
-        re_loadbit.load_bit()
-        time.sleep(0.5)
-
-        for i in range(1,2):
+        '''
+        time.sleep(1)
+        for i in range(8,9):
             cols = [False]*16
             j=2*i-1
             cols[j-1]=True
@@ -280,18 +279,19 @@ if __name__ == "__main__":
             if not os.path.exists(col_dir):
                 os.makedirs(col_dir)
             os.chdir(col_dir)
-
-            unt_thrs_mask = thresh_sc_unt('')
-            time.sleep(0.5)
+            
+            #unt_thrs_mask = thresh_sc_unt('')
+            #time.sleep(2.0)
             noise_masks = noise_sc()
-            time.sleep(0.5)
+            time.sleep(2.0)
             thrs_mask = thresh_sc_tuned(noise_masks)
-            time.sleep(0.5)
-
-            pixels = time_pixels(i)
-            timewalk_sc(noise_masks, thrs_mask, pixels)
-            #timewalk_sc('', '', pixels)
+            time.sleep(2.0)
+            
+            if i==1:
+                pixels = time_pixels(i)
+                timewalk_sc(noise_masks, thrs_mask, pixels)
+            
             os.chdir('..')
-
+        
 
 

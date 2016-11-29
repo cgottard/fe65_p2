@@ -18,7 +18,7 @@ local_configuration = {
     "PrmpVbpDac": 36,
     "vthin1Dac": 255,
     "vthin2Dac": 0,
-    "vffDac": 24,
+    "vffDac": 42,
     "PrmpVbnFolDac": 51,
     "vbnLccDac": 1,
     "compVbnDac": 25,
@@ -58,7 +58,7 @@ class proofread_scan(ScanBase):
 
         #scan_path = os.path.dirname(os.path.realpath(sys.argv[0]))
         #path = scan_path.replace('fe65p2/scans','firmware/bits/goodSPI_bits/')
-        path = "/home/topcoup/Applications/fe65_p2/firmware/bits/goodSPI_bits/"
+        path = "/home/user/Desktop/carlo/fe65_p2/firmware/bits/goodSPI_bits/"
         self.bitfiles = ["fe65p2_mio_3MHz.bit", "fe65p2_mio_4MHz.bit", "fe65p2_mio_6MHz.bit",
                          "fe65p2_mio_8MHz.bit", "fe65p2_mio_12MHz.bit", "fe65p2_mio_16MHz.bit",
                          "fe65p2_mio_24MHz.bit", "fe65p2_mio_32MHz.bit"]
@@ -133,6 +133,8 @@ class proofread_scan(ScanBase):
                 errors = []  # used for screen output - debug
                 ERR = []  # pixel errors storage
                 err_count = 0
+
+                logging.info('Temperature: %s', str(self.dut['ntc'].get_temperature('C')))
 
                 for i in range(0, 4):
                     self.dut['pixel_conf'][:] = bv_mask
@@ -233,6 +235,6 @@ class proofread_scan(ScanBase):
 
 
 if __name__ == "__main__":
-    scan = proofread_scan("/home/carlo/fe65_p2/fe65p2/fe65p2.yaml")
+    scan = proofread_scan("/home/user/Desktop/carlo/fe65_p2/fe65p2/fe65p2.yaml")
     scan.start(**local_configuration)
     scan.shmoo_plotting()

@@ -51,6 +51,15 @@ class DigitalScan(ScanBase):
         self.dut['global_conf']['compVbnDac'] = kwargs['compVbnDac']
         self.dut['global_conf']['preCompVbnDac'] = kwargs['preCompVbnDac']
         
+        # to change the supply voltage
+        self.dut['VDDA'].set_current_limit(200, unit='mA')
+        self.dut['VDDA'].set_voltage(1.2, unit='V')
+        self.dut['VDDA'].set_enable(True)
+        self.dut['VDDD'].set_voltage(1.2, unit='V')
+        self.dut['VDDD'].set_enable(True)
+        self.dut['VAUX'].set_voltage(1.2, unit='V')
+        self.dut['VAUX'].set_enable(True)
+        
         #write InjEnLd & PixConfLd to '1
         self.dut['pixel_conf'].setall(True)
         self.dut.write_pixel_col()

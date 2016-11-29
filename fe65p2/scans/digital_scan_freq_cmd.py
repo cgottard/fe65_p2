@@ -34,7 +34,7 @@ class MetaTable(tb.IsDescription):
 local_configuration = {
     "mask_steps": 4,
     "repeat_command": 100,
-    "scan_type" : 'data',
+    "scan_type" : 'cmd',
     "columns": [True] * 16,
     #DAC parameters
     "PrmpVbpDac": 36,

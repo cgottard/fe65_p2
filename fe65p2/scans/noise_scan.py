@@ -105,6 +105,8 @@ class NoiseScan(ScanBase):
         # self.dut['global_conf']['ColSrEn'][:] = bitarray.bitarray(columns)
         self.dut.write_global()
 
+        logging.info('Temperature: %s', str(self.dut['ntc'].get_temperature('C')))
+
         mask_en = np.zeros([64, 64], dtype=np.bool)
         mask_tdac = np.ones([64, 64], dtype=np.uint8)
 

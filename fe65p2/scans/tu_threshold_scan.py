@@ -54,7 +54,9 @@ class ThresholdScanTuned(ScanBase):
             if os.path.exists(mask):
                 in_file = tb.open_file(mask, 'r')
                 dac_status = yaml.load(in_file.root.meta_data.attrs.dac_status)
-                vthrs1 = dac_status['vthin1Dac'] + 3
+                vthrs1 = dac_status['vthin1Dac']
+                if vthrs1 < 252: 
+                    vthrs1+=3
                 print "Loaded vth1 from noise scan: ", vthrs1
                 return vthrs1
             else: return 100
@@ -160,6 +162,8 @@ class ThresholdScanTuned(ScanBase):
 
             bv_mask = bitarray.bitarray(lmask)
 
+            logging.info('Temperature: %s', str(self.dut['ntc'].get_temperature('C')))
+
             with self.readout(scan_param_id = idx):
                 logging.info('Scan Parameter: %f (%d of %d)', k, idx+1, len(scan_range))
                 pbar = ProgressBar(maxval=mask_steps).start()
@@ -194,14 +198,17 @@ class ThresholdScanTuned(ScanBase):
                     pbar.update(i)
 
                     while not self.dut['inj'].is_done():
+                        time.sleep(0.05)
                         pass
 
                     while not self.dut['trigger'].is_done():
+                        time.sleep(0.05)
                         pass
 
         scan_results = self.h5_file.create_group("/", 'scan_results', 'Scan Masks')
         self.h5_file.createCArray(scan_results, 'tdac_mask', obj=mask_tdac)
         self.h5_file.createCArray(scan_results, 'en_mask', obj=mask_en)
+        
 
 
     def analyze(self):

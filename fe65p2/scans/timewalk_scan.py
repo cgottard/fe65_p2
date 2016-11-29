@@ -25,11 +25,11 @@ for (r,c) in itertools.product(row,row):
 local_configuration = {
     "mask_steps": 4,
     "repeat_command": 101,
-    "scan_range": [0.1, 0.5, 0.05],
+    "scan_range": [0.05, 0.5, 0.01],
     "columns": [True] * 2 + [False] * 14,
     "mask_filename": '',
     "noise_mask":'',
-    "pix_list": [(2,6), (2,3)],
+    "pix_list": [(2,6)],
      #DAC parameters
     "PrmpVbpDac": 36,
     "vthin1Dac": 80,
@@ -63,7 +63,8 @@ class TimewalkScan(ScanBase):
             if os.path.exists(mask):
                 in_file = tb.open_file(mask, 'r')
                 dac_status = yaml.load(in_file.root.meta_data.attrs.dac_status)
-                vthrs1 = dac_status['vthin1Dac'] + 3
+                vthrs1 = dac_status['vthin1Dac']
+                if vthrs1 < 244: vthrs1+=10
                 logging.info("Loaded vth1 from noise scan: %s", str(vthrs1))
                 return vthrs1
             else: return 80
@@ -205,9 +206,11 @@ class TimewalkScan(ScanBase):
                     self.dut['inj'].start()
 
                     while not self.dut['inj'].is_done():
+                        time.sleep(0.005)
                         pass
 
                     while not self.dut['trigger'].is_done():
+                        time.sleep(0.005)
                         pass
 
                     self.dut['tdc'].ENABLE = 0

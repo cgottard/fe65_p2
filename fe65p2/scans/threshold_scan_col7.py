@@ -15,7 +15,7 @@ import os
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - [%(levelname)-8s] (%(threadName)-10s) %(message)s")
 
 local_configuration = {
-    "columns":[True] * 2 + [False] * 14,
+    "columns":[False]*10+[True]*2+[False]*2,
 #   DAC parameters
     "PrmpVbpDac":36,
     "vthin1Dac":255,
@@ -29,13 +29,13 @@ local_configuration = {
 #   thrs scan
     "mask_steps":4,
     "repeat_command":100,
-    "scan_range":[0.05, 0.55, 0.01],
+    "scan_range":[0.2, 0.8, 0.01],
     "mask_filename":'',
     "TDAC":16
 }
 
 class ThresholdScan(ScanBase):
-    scan_id = "threshold_scan"
+    scan_id = "threshold_scan7"
 
 
     def scan(self, mask_steps=4, TDAC=16, scan_range=[0.0, 0.6, 0.01], repeat_command=100, mask_filename='', **kwargs):
@@ -206,7 +206,7 @@ class ThresholdScan(ScanBase):
         scan_results = self.h5_file.create_group("/", 'scan_results', 'Scan Masks')
         self.h5_file.createCArray(scan_results, 'tdac_mask', obj=mask_tdac)
         self.h5_file.createCArray(scan_results, 'en_mask', obj=mask_en)
-        
+
 
     def analyze(self):
         h5_filename = self.output_filename +'.h5'

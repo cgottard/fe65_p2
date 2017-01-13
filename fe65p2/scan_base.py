@@ -59,9 +59,9 @@ class ScanBase(object):
         filter_raw_data = tb.Filters(complib='blosc', complevel=5, fletcher32=False)
         self.filter_tables = tb.Filters(complib='zlib', complevel=5, fletcher32=False)
         self.h5_file = tb.open_file(filename, mode='w', title=self.scan_id)
-        self.raw_data_earray = self.h5_file.createEArray(self.h5_file.root, name='raw_data', atom=tb.UIntAtom(),
+        self.raw_data_earray = self.h5_file.create_earray(self.h5_file.root, name='raw_data', atom=tb.UIntAtom(),
                                                          shape=(0,), title='raw_data', filters=filter_raw_data)
-        self.meta_data_table = self.h5_file.createTable(self.h5_file.root, name='meta_data', description=MetaTable,
+        self.meta_data_table = self.h5_file.create_table(self.h5_file.root, name='meta_data', description=MetaTable,
                                                         title='meta_data', filters=self.filter_tables)
 
         self.meta_data_table.attrs.kwargs = yaml.dump(kwargs)
@@ -115,14 +115,14 @@ class ScanBase(object):
         #temp and power log
         if self.scan_id != "status_scan":
             logname = 'reg_'+str(self.scan_id)+'.dat'
-            vth1=self.final_vth1
+            vth1_set=self.final_vth1
 
             legend = "Time \t Temp(C) \t Dig[mA] \t Ana[mA] \t Aux[mA] \t Dig[V] \t vth1 \n"
             if not os.path.exists("./"+logname):
                  with open(logname, "a") as t_file:
                     t_file.write(legend)
             temp_f="{:.2f}".format(temp)
-            t_log = time.strftime("%d-%b-%H:%M:%S")+"\t"+str(temp_f)+"\t"+str(pw['VDDD[mA]'])+"\t"+str(pw['VDDA[mA]'])+"\t"+str(pw['VAUX[mA]'])+"\t"+str(pw['VDDD[V]'])+"\t"+str(vth1)+"\n"
+            t_log = time.strftime("%d-%b-%H:%M:%S")+"\t"+str(temp_f)+"\t"+str(pw['VDDD[mA]'])+"\t"+str(pw['VDDA[mA]'])+"\t"+str(pw['VAUX[mA]'])+"\t"+str(pw['VDDD[V]'])+"\t"+str(vth1_set)+"\n"
             with open(logname, "a") as t_file:
                  t_file.write(t_log)
 

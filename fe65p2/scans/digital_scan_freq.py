@@ -217,9 +217,9 @@ class DigitalScanFreq(object):
                 filter_raw_data = tb.Filters(complib='blosc', complevel=5, fletcher32=False)
                 self.filter_tables = tb.Filters(complib='zlib', complevel=5, fletcher32=False)
                 self.h5_file = tb.open_file(filename, mode='w', title=self.scan_id)
-                self.raw_data_earray = self.h5_file.createEArray(self.h5_file.root, name='raw_data', atom=tb.UIntAtom(),
+                self.raw_data_earray = self.h5_file.create_earray(self.h5_file.root, name='raw_data', atom=tb.UIntAtom(),
                                                                  shape=(0,), title='raw_data', filters=filter_raw_data)
-                self.meta_data_table = self.h5_file.createTable(self.h5_file.root, name='meta_data', description=MetaTable,
+                self.meta_data_table = self.h5_file.create_table(self.h5_file.root, name='meta_data', description=MetaTable,
                                                                 title='meta_data', filters=self.filter_tables)
 
                 self.meta_data_table.attrs.kwargs = yaml.dump(kwargs)
@@ -332,7 +332,7 @@ class DigitalScanFreq(object):
             raw_data = in_file_h5.root.raw_data[:]
             meta_data = in_file_h5.root.meta_data[:]
             hit_data = self.dut.interpret_raw_data(raw_data, meta_data)
-            in_file_h5.createTable(in_file_h5.root, 'hit_data', hit_data, filters=self.filter_tables)
+            in_file_h5.create_table(in_file_h5.root, 'hit_data', hit_data, filters=self.filter_tables)
             hits = hit_data['col'].astype(np.uint16)
             hits = hits * 64
             hits = hits + hit_data['row']

@@ -204,8 +204,8 @@ class ThresholdScan(ScanBase):
                         pass
 
         scan_results = self.h5_file.create_group("/", 'scan_results', 'Scan Masks')
-        self.h5_file.createCArray(scan_results, 'tdac_mask', obj=mask_tdac)
-        self.h5_file.createCArray(scan_results, 'en_mask', obj=mask_en)
+        self.h5_file.create_carray(scan_results, 'tdac_mask', obj=mask_tdac)
+        self.h5_file.create_carray(scan_results, 'en_mask', obj=mask_en)
         
 
     def analyze(self):
@@ -215,7 +215,7 @@ class ThresholdScan(ScanBase):
             meta_data = in_file_h5.root.meta_data[:]
 
             hit_data = self.dut.interpret_raw_data(raw_data, meta_data)
-            in_file_h5.createTable(in_file_h5.root, 'hit_data', hit_data, filters=self.filter_tables)
+            in_file_h5.create_table(in_file_h5.root, 'hit_data', hit_data, filters=self.filter_tables)
             #self.meta_data_table.attrs.dac_status
         analysis.analyze_threshold_scan(h5_filename)
         status_plot = plotting.plot_status(h5_filename)

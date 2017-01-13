@@ -1,6 +1,18 @@
 from basil.dut import Dut
-	
-pow = Dut('/home/user/Desktop/carlo/basil/basil/HL/tti_ql335tp.yaml')
-pow.init()
-pow['QL355TP']['channel 2']['OP2'] = 1
-print 'Turned off' 
+import logging
+import time
+
+
+try:
+    pow = Dut('/home/topcoup/Applications/basil/examples/lab_devices/ttiql335tp_pyserial2.yaml')
+    pow.init()
+    logging.info('Connected to ' + str(pow['Power'].get_info()))
+    logging.info('Powering off')
+    pow['Power'].turn_off()
+    time.sleep(10)
+    logging.info('Powering on')
+    pow['Power'].turn_on()
+
+except RuntimeError:
+    logging.info('Connection to power supply failed')
+

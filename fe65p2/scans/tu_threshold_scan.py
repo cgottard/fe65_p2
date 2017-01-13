@@ -62,6 +62,7 @@ class ThresholdScanTuned(ScanBase):
             else: return 100
 
         vth1 = load_vthin1Dac(mask_filename)
+        self.final_vth1 = vth1
 
         inj_factor = 1.0
         INJ_LO = 0.0
@@ -206,8 +207,8 @@ class ThresholdScanTuned(ScanBase):
                         pass
 
         scan_results = self.h5_file.create_group("/", 'scan_results', 'Scan Masks')
-        self.h5_file.createCArray(scan_results, 'tdac_mask', obj=mask_tdac)
-        self.h5_file.createCArray(scan_results, 'en_mask', obj=mask_en)
+        self.h5_file.create_carray(scan_results, 'tdac_mask', obj=mask_tdac)
+        self.h5_file.create_carray(scan_results, 'en_mask', obj=mask_en)
         
 
 
@@ -218,7 +219,7 @@ class ThresholdScanTuned(ScanBase):
             meta_data = in_file_h5.root.meta_data[:]
 
             hit_data = self.dut.interpret_raw_data(raw_data, meta_data)
-            in_file_h5.createTable(in_file_h5.root, 'hit_data', hit_data, filters=self.filter_tables)
+            in_file_h5.create_table(in_file_h5.root, 'hit_data', hit_data, filters=self.filter_tables)
             #self.meta_data_table.attrs.dac_status
         analysis.analyze_threshold_scan(h5_filename)
         status_plot = plotting.plot_status(h5_filename)
@@ -232,6 +233,6 @@ class ThresholdScanTuned(ScanBase):
         save(vplot(hplot(occ_plot, tot_plot, lv1id_plot), scan_pix_hist, t_dac, status_plot))
 
 if __name__ == "__main__":
-    scan = ThresholdScan()
+    scan = ThresholdScanTuned()
     scan.start(**local_configuration)
     scan.analyze()

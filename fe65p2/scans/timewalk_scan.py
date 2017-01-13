@@ -308,7 +308,7 @@ class TimewalkScan(ScanBase):
                                         dtype=[('charge', float), ('pixel_no', int), ('hits', int),
                                                ('tot_ns', float), ('err_tot_ns', float), ('delay_ns', float),
                                                ('err_delay_ns', float)])
-            tdc_table=in_file_h5.createTable(in_file_h5.root, 'tdc_data', avg_tab, filters=self.filter_tables)
+            tdc_table=in_file_h5.create_table(in_file_h5.root, 'tdc_data', avg_tab, filters=self.filter_tables)
             tdc_table.attrs.repeat_command = repeat_command_dic
             thresholds = ()
             expfit0 = ()
@@ -355,7 +355,7 @@ class TimewalkScan(ScanBase):
                                        dtype=[('pixel_no', int), ('td_threshold', float),
                                               ('expfit0', float), ('expfit1', float), ('expfit2', float),
                                               ('expfit3', float)])
-            in_file_h5.createTable(in_file_h5.root, 'td_threshold', thresh, filters=self.filter_tables)
+            in_file_h5.create_table(in_file_h5.root, 'td_threshold', thresh, filters=self.filter_tables)
         p1, p2, single_scan = plotting.plot_timewalk(h5_filename)
         output_file(self.output_filename + '.html', title=self.run_name)
         status = plotting.plot_status(h5_filename)

@@ -221,8 +221,8 @@ class NoiseScan(ScanBase):
         self.dut['global_conf']['PrmpVbpDac'] = kwargs['PrmpVbpDac']
 
         scan_results = self.h5_file.create_group("/", 'scan_results', 'Scan Results')
-        self.h5_file.createCArray(scan_results, 'tdac_mask', obj=mask_tdac)
-        self.h5_file.createCArray(scan_results, 'en_mask', obj=mask_en)
+        self.h5_file.create_carray(scan_results, 'tdac_mask', obj=mask_tdac)
+        self.h5_file.create_carray(scan_results, 'en_mask', obj=mask_en)
         logging.info('Final vthin1Dac value: %s', str(self.vth1Dac))
         self.final_vth1=self.vth1Dac
 
@@ -234,7 +234,7 @@ class NoiseScan(ScanBase):
             meta_data = in_file_h5.root.meta_data[:]
 
             hit_data = self.dut.interpret_raw_data(raw_data, meta_data)
-            in_file_h5.createTable(in_file_h5.root, 'hit_data', hit_data, filters=self.filter_tables)
+            in_file_h5.create_table(in_file_h5.root, 'hit_data', hit_data, filters=self.filter_tables)
 
         status_plot = plotting.plot_status(h5_filename)
         occ_plot, H = plotting.plot_occupancy(h5_filename)

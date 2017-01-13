@@ -175,7 +175,7 @@ class AnalogScan(ScanBase):
             meta_data = in_file_h5.root.meta_data[:]
             
             hit_data = self.dut.interpret_raw_data(raw_data, meta_data)
-            in_file_h5.createTable(in_file_h5.root, 'hit_data', hit_data, filters=self.filter_tables)
+            in_file_h5.create_table(in_file_h5.root, 'hit_data', hit_data, filters=self.filter_tables)
             
         occ_plot, H = plotting.plot_occupancy(h5_filename)
         tot_plot,_ = plotting.plot_tot_dist(h5_filename)

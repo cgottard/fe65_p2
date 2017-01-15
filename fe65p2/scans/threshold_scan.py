@@ -7,7 +7,8 @@ import logging
 import numpy as np
 import bitarray
 import tables as tb
-from bokeh.charts import output_file, show, vplot, hplot, save
+from bokeh.charts import output_file, hplot, save
+from bokeh.models.layouts import Column
 from progressbar import ProgressBar
 from basil.dut import Dut
 import os
@@ -226,7 +227,7 @@ class ThresholdScan(ScanBase):
         t_dac = plotting.t_dac_plot(h5_filename)
 
         output_file(self.output_filename + '.html', title=self.run_name)
-        save(vplot(hplot(occ_plot, tot_plot, lv1id_plot), scan_pix_hist, t_dac, status_plot))
+        save(Column(hplot(occ_plot, tot_plot, lv1id_plot), scan_pix_hist, t_dac, status_plot))
 
 if __name__ == "__main__":
     scan = ThresholdScan()

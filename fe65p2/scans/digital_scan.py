@@ -7,7 +7,8 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - [%(leve
 
 import numpy as np
 import bitarray
-from bokeh.charts import output_file, show, vplot, hplot, save
+from bokeh.charts import output_file, show, hplot, save
+from bokeh.models.layouts import Column
 import tables as tb
 from progressbar import ProgressBar
 import os
@@ -159,7 +160,7 @@ class DigitalScan(ScanBase):
         lv1id_plot, _ = plotting.plot_lv1id_dist(h5_filename)
 
         output_file(self.output_filename + '.html', title=self.run_name)
-        save(vplot(occ_plot, tot_plot, lv1id_plot))
+        save(Column(occ_plot, tot_plot, lv1id_plot))
             
         return H
 

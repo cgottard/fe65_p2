@@ -3,9 +3,9 @@ import time
 import logging
 import yaml
 from contextlib import contextmanager
-from fe65p2.scan_base import ScanBase
 import tables as tb
-from bokeh.charts import output_file, show, vplot, hplot, save
+from bokeh.charts import output_file, show, hplot, save
+from bokeh.models.layouts import Column
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.table import Table
@@ -160,7 +160,7 @@ class DigitalScanFreq(object):
 
         #scan_path = os.path.dirname(os.path.realpath(sys.argv[0]))
         #path = scan_path.replace('fe65p2/scans', 'firmware/bits/')
-        path="/home/user/Desktop/carlo/fe65_p2/firmware/bits/"
+        path="/home/topcoup/Applications/fe65_p2/firmware/bits/"
         self.scantype = kwargs['scan_type']
 
         if self.scantype == 'cmd':
@@ -350,7 +350,7 @@ class DigitalScanFreq(object):
             tot_plot, _ = plotting.plot_tot_dist(h5_filename)
             lv1id_plot, _ = plotting.plot_lv1id_dist(h5_filename)
             output_file(self.output_filename + '.html', title=self.run_name)
-            save(vplot(occ_plot, tot_plot, lv1id_plot))
+            save(Column(occ_plot, tot_plot, lv1id_plot))
             return H
 
 

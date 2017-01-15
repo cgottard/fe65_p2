@@ -5,7 +5,8 @@ import yaml
 from contextlib import contextmanager
 from fe65p2.scan_base import ScanBase
 import tables as tb
-from bokeh.charts import output_file, show, vplot, hplot, save
+from bokeh.charts import output_file, show, hplot, save
+from bokeh.models.layouts import Column
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.table import Table
@@ -350,7 +351,7 @@ class DigitalScanFreq(object):
             tot_plot, _ = plotting.plot_tot_dist(h5_filename)
             lv1id_plot, _ = plotting.plot_lv1id_dist(h5_filename)
             output_file(self.output_filename + '.html', title=self.run_name)
-            save(vplot(occ_plot, tot_plot, lv1id_plot))
+            save(Column(occ_plot, tot_plot, lv1id_plot))
             return H
 
 

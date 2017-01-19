@@ -7,8 +7,8 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - [%(leve
 
 import numpy as np
 import bitarray
-from bokeh.charts import output_file, show, hplot, save
-from bokeh.models.layouts import Column
+from bokeh.charts import output_file, show, save
+from bokeh.models.layouts import Column, Row
 import tables as tb
 from progressbar import ProgressBar
 import os
@@ -42,6 +42,7 @@ class DigitalScan(ScanBase):
         repeat : int
             Number of injections.
         '''
+        logging.info('\e[31m Starting Digital Scan \e[0m')
 
         self.dut['global_conf']['PrmpVbpDac'] = kwargs['PrmpVbpDac']
         self.dut['global_conf']['vthin1Dac'] = kwargs['vthin1Dac']

@@ -8,6 +8,7 @@ from fe65p2.scans.analog_scan import AnalogScan
 from fe65p2.scans.proofread_scan import proofread_scan
 from fe65p2.scan_base import ScanBase
 import fe65p2.plotting as  plotting
+from fe65p2.power import power
 import numpy as np
 import os
 import sys
@@ -17,8 +18,8 @@ from itertools import cycle
 import logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(filename)s - [%(levelname)-8s] (%(threadName)-10s) %(message)s")
 
-fe65p2_path="/home/user/Desktop/carlo/fe65_p2"
-storage_dir="/run/media/user/TB/"
+fe65p2_path="/home/topcoup/Applications/fe65_p2"
+storage_dir="/media/topcoup/TB"
 
 par_conf = {
     "columns": [True] * 16,
@@ -30,8 +31,7 @@ par_conf = {
     "PrmpVbnFolDac" : 51,   #not subject to change
     "vbnLccDac" : 1,        #not subject to change
     "compVbnDac":25,        #not subject to change
-    "preCompVbnDac" : 110
-}
+    "preCompVbnDac" : 100 }   #critical, 50 for digi_scan_freq. 50 or 110 def. va
 
 #parameter folder name
 par_string = "Prmp"+str(par_conf['PrmpVbpDac']) +"_vthA"+str(par_conf['vthin1Dac'])+"_vthB"+str(par_conf['vthin2Dac'])\
@@ -85,10 +85,32 @@ def thresh_sc_tuned(noise_mask_file=''):
     }
     scan_conf = dict(par_conf, **custom_conf)
     thrs_sc.start(**scan_conf)
-    thrs_sc.analyze()
+    fetch_dic = thrs_sc.analyze()
     thrs_mask_file=str(thrs_sc.output_filename)+'.h5'
     thrs_sc.dut.close()
-    return thrs_mask_file
+    return thrs_mask_file, fetch_dic
+
+def timewalk_sc(noise_mask, th_mask, pix_list, mu, sigma):
+    logging.info('receiving %s', mu)
+    time_sc = TimewalkScan()
+    range_min = 0.005
+    range_max = mu + 10.0*sigma
+    step = 0.05
+    logging.info('TIMEWALK mu, min, max, step: %f %f %f %f', mu,range_min,range_max, step)
+    print 'TIMEWALK receiving ', mu, sigma
+    custom_conf = {
+        "mask_steps" : 4,
+        "repeat_command" : 101,
+        #"scan_range" : [range_min,range_max, step],
+        "scan_range":  [0.01, 0.25, 0.01],
+        "mask_filename":th_mask,
+        "pix_list":pix_list
+    }
+    scan_conf = dict(par_conf, **custom_conf)
+    scanrange=custom_conf["scan_range"]
+    time_sc.start(**scan_conf)
+    time_sc.tdc_table(len(np.arange(scanrange[0], scanrange[1], scanrange[2]))+3)
+    time_sc.dut.close()
 
 def digi_sc():
     logging.info("Starting Digital Scan")
@@ -115,23 +137,6 @@ def analog_sc():
     ana_sc.start(**scan_conf)
     ana_sc.analyze()
     ana_sc.dut.close()
-
-def timewalk_sc(noise_mask, th_mask, pix_list):
-    time_sc = TimewalkScan()
-    custom_conf = {
-        "mask_steps" : 4,
-        "repeat_command" : 101,
-        "scan_range" : [0.005, 0.25, 0.005],
-        "noise_mask" : noise_mask,
-        "mask_filename":th_mask,
-        "pix_list":pix_list
-    }
-    scan_conf = dict(par_conf, **custom_conf)
-    scanrange=custom_conf["scan_range"]
-    time_sc.start(**scan_conf)
-    time_sc.tdc_table(len(np.arange(scanrange[0], scanrange[1], scanrange[2]))+3)
-    time_sc.dut.close()
-
 
 
 def digi_shmoo_sc_cmd():
@@ -190,12 +195,39 @@ class status_sc(ScanBase):
         self.dut['global_conf']['preCompVbnDac'] = 50
         logging.info('Power Status: %s', str(self.dut.power_status()))
         logging.info('DAC Status: %s', str(self.dut.dac_status()))
-        self.dut['ntc'].get_temperature('C')
         self.dut.close()
+
+class temp_sc(ScanBase):
+    scan_id = "temp_scan"
+
+    def measure_temp(self):
+        N=200
+        temp=0.0
+        for m in range(0, N):
+            temp += self.dut['ntc'].get_temperature('C')
+        temp_avg = temp/float(N)
+        t_log = time.strftime("%d-%b-%H:%M:%S") + "\t" + str(temp_avg) + "\n"
+        logname = 'reg_temp.dat'
+        legend = "Time \t \t temp(C) \n"
+        if not os.path.exists("./"+logname):
+            with open(logname, "a") as t_file:
+                t_file.write(legend)
+        with open(logname, "a") as t_file:
+            t_file.write(t_log)
+        self.dut.close()
+
+
+# n, bins, patches = plt.hist(buf, 10, facecolor='green', alpha=0.75)
+# plt.xlabel('Current (uA)')
+# plt.ylabel('Count')
+# plt.title('ISRC 7')
+# plt.axis([90, 110, 0, N/5])
+# plt.grid(True)
+# plt.show()
 
 def time_pixels(col):
     lp = []
-    if col==1: lp=[(2,6), (3,3)]
+    if col==1: lp=[(2,6), (6,20)]
     if col==2: lp=[(6,20),(14,10)]
     if col==3: lp=[(20,20),(22,18)]
     if col==4: lp=[(28,28),(30,31)]
@@ -210,6 +242,13 @@ def time_pixels(col):
 
 
 if __name__ == "__main__":
+
+    pow = power()
+    pow.restart()
+    #loadbit = status_sc()
+    #loadbit.load_bit()
+    #temp = temp_sc()
+    #temp.measure_temp()
 
     #logging.basicConfig(filename='example.log', filemode='w', level=logging.DEBUG)
     for keys,values in par_conf.items():
@@ -229,7 +268,7 @@ if __name__ == "__main__":
         #column independent scans
         '''
         time.sleep(1)
-        
+
         print '*** CMD SCAN ***'
         dir = os.path.join(os.getcwd(), "CMD_shmoo")
         if not os.path.exists(dir):
@@ -255,7 +294,7 @@ if __name__ == "__main__":
         os.chdir(dir)
         pix_reg_sc()
         os.chdir('..')
-        
+
         time.sleep(1)
         print '*** DIGI SCAN ***'
         loadbit = status_sc()
@@ -267,9 +306,15 @@ if __name__ == "__main__":
         os.chdir(dir)
         digi_sc()
         os.chdir('..')
-        '''
+
         time.sleep(1)
-        for i in range(8,9):
+        '''
+        for i in range(1,2):
+
+            pow.restart()
+            temp2 = temp_sc()
+            temp2.measure_temp()
+
             cols = [False]*16
             j=2*i-1
             cols[j-1]=True
@@ -279,19 +324,23 @@ if __name__ == "__main__":
             if not os.path.exists(col_dir):
                 os.makedirs(col_dir)
             os.chdir(col_dir)
-            
+
             #unt_thrs_mask = thresh_sc_unt('')
             #time.sleep(2.0)
             noise_masks = noise_sc()
             time.sleep(2.0)
-            thrs_mask = thresh_sc_tuned(noise_masks)
+            thrs_mask, musigma = thresh_sc_tuned(noise_masks)
             time.sleep(2.0)
             
             if i==1:
                 pixels = time_pixels(i)
-                timewalk_sc(noise_masks, thrs_mask, pixels)
-            
+                timewalk_sc(noise_masks, noise_masks, pixels, 1, 2)
+                #timewalk_sc('/media/topcoup/TB/Prmp36_vthA255_vthB0_PreCmp110/col1/output_data/20170118_150711_noise_scan.h', '/media/topcoup/TB/Prmp36_vthA255_vthB0_PreCmp110/col1/output_data/20170118_151242_tu_threshold_scan.h5', pixels, 0.05, 0.007 )
+                #timewalk_sc('/media/topcoup/TB/Prmp36_vthA255_vthB0_PreCmp110/col1/output_data/20170118_151242_tu_threshold_scan.h5', '/media/topcoup/TB/Prmp36_vthA255_vthB0_PreCmp110/col1/output_data/20170118_151242_tu_threshold_scan.h5', pixels, 0.05, 0.007)
+
+            pow.restart()
             os.chdir('..')
-        
+
+        par_conf['columns'] = [True]*16
 
 

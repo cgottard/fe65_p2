@@ -7,8 +7,8 @@ import logging
 import numpy as np
 import bitarray
 import tables as tb
-from bokeh.charts import output_file, hplot, save
-from bokeh.models.layouts import Column
+from bokeh.charts import output_file, save
+from bokeh.models.layouts import Column, Row
 from progressbar import ProgressBar
 from basil.dut import Dut
 import os
@@ -74,6 +74,7 @@ class ThresholdScan(ScanBase):
             logging.info('External injector not connected. Switch to internal one')
             self.dut['INJ_LO'].set_voltage(INJ_LO, unit='V')
 
+        logging.info('starting THRESHOLD SCAN')
         self.dut['global_conf']['PrmpVbpDac'] = kwargs['PrmpVbpDac']
         self.dut['global_conf']['vthin1Dac'] = vth1
         self.dut['global_conf']['vthin2Dac'] = kwargs['vthin2Dac']
@@ -157,11 +158,10 @@ class ThresholdScan(ScanBase):
         for idx, k in enumerate(scan_range):
             dut['Pulser'].set_voltage(INJ_LO, float(INJ_LO + k), unit='V')
             self.dut['INJ_HI'].set_voltage(float(INJ_LO + k), unit='V')
-            time.sleep(0.5)
 
             bv_mask = bitarray.bitarray(lmask)
 
-            logging.info('Temperature: %s', str(self.dut['ntc'].get_temperature('C')))
+            #logging.info('Temperature: %s', str(self.dut['ntc'].get_temperature('C')))
 
             with self.readout(scan_param_id = idx):
                 logging.info('Scan Parameter: %f (%d of %d)', k, idx+1, len(scan_range))
@@ -227,7 +227,7 @@ class ThresholdScan(ScanBase):
         t_dac = plotting.t_dac_plot(h5_filename)
 
         output_file(self.output_filename + '.html', title=self.run_name)
-        save(Column(hplot(occ_plot, tot_plot, lv1id_plot), scan_pix_hist, t_dac, status_plot))
+        save(Column(Row(occ_plot, tot_plot, lv1id_plot), scan_pix_hist, t_dac, status_plot))
 
 if __name__ == "__main__":
     scan = ThresholdScan()

@@ -7,8 +7,8 @@ import logging
 import numpy as np
 import bitarray
 import tables as tb
-from bokeh.charts import output_file, hplot, save
-from bokeh.models.layouts import Column
+from bokeh.charts import output_file, save
+from bokeh.models.layouts import Column, Row
 from progressbar import ProgressBar
 from basil.dut import Dut
 import os
@@ -77,6 +77,7 @@ class ThresholdScanTuned(ScanBase):
             logging.info('External injector not connected. Switch to internal one')
             self.dut['INJ_LO'].set_voltage(INJ_LO, unit='V')
 
+            logging.info('\e[31m Starting Tuned Threshold Scan \e[0m')
         self.dut['global_conf']['PrmpVbpDac'] = kwargs['PrmpVbpDac']
         self.dut['global_conf']['vthin1Dac'] = vth1
         self.dut['global_conf']['vthin2Dac'] = kwargs['vthin2Dac']
@@ -164,7 +165,7 @@ class ThresholdScanTuned(ScanBase):
 
             bv_mask = bitarray.bitarray(lmask)
 
-            logging.info('Temperature: %s', str(self.dut['ntc'].get_temperature('C')))
+            #logging.info('Temperature: %s', str(self.dut['ntc'].get_temperature('C')))
 
             with self.readout(scan_param_id = idx):
                 logging.info('Scan Parameter: %f (%d of %d)', k, idx+1, len(scan_range))
@@ -210,7 +211,7 @@ class ThresholdScanTuned(ScanBase):
         scan_results = self.h5_file.create_group("/", 'scan_results', 'Scan Masks')
         self.h5_file.create_carray(scan_results, 'tdac_mask', obj=mask_tdac)
         self.h5_file.create_carray(scan_results, 'en_mask', obj=mask_en)
-        
+
 
 
     def analyze(self):
@@ -229,9 +230,21 @@ class ThresholdScanTuned(ScanBase):
         lv1id_plot, _ = plotting.plot_lv1id_dist(h5_filename)
         scan_pix_hist, _ = plotting.scan_pix_hist(h5_filename)
         t_dac = plotting.t_dac_plot(h5_filename)
+        with tb.open_file(h5_filename, 'r+') as in_file_h5:
+            tdac_mask = in_file_h5.root.scan_results.tdac_mask
+            en_mask = in_file_h5.root.scan_results.en_mask
+            counter=0
+            for icol,col in enumerate(en_mask):
+                for ipix,pix in enumerate(col):
+                    if pix==True:
+                        if tdac_mask[icol][ipix]==1: counter+=1
+                        in_file_h5.root.Thresh_results.Threshold_pure.attrs.disabled = counter
+            fit_res = in_file_h5.root.Thresh_results.Threshold_pure.attrs.fitdata_thresh
 
         output_file(self.output_filename + '.html', title=self.run_name)
-        save(Column(hplot(occ_plot, tot_plot, lv1id_plot), scan_pix_hist, t_dac, status_plot))
+        save(Column(Row(occ_plot, tot_plot, lv1id_plot), scan_pix_hist, t_dac, status_plot))
+        logging.info('Returnin')
+        return fit_res
 
 if __name__ == "__main__":
     scan = ThresholdScanTuned()

@@ -161,7 +161,7 @@ class DigitalScanFreq(object):
 
         #scan_path = os.path.dirname(os.path.realpath(sys.argv[0]))
         #path = scan_path.replace('fe65p2/scans', 'firmware/bits/')
-        path="/home/user/Desktop/carlo/fe65_p2/firmware/bits/"
+        path = "/home/topcoup/Applications/fe65_p2/firmware/bits/"
         self.scantype = kwargs['scan_type']
 
         if self.scantype == 'cmd':

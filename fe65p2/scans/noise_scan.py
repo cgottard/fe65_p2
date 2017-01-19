@@ -11,7 +11,7 @@ import numpy as np
 import bitarray
 import tables as tb
 from bokeh.charts import output_file, hplot, save
-from bokeh.models.layouts import Column
+from bokeh.models.layouts import Column, Row
 from progressbar import ProgressBar
 import os
 
@@ -48,7 +48,7 @@ class NoiseScan(ScanBase):
         repeat : int
             Number of injections.
         '''
-
+        logging.info('\e[31m Starting Noise Scan \e[0m')
         INJ_LO = 0.2
         self.dut['INJ_LO'].set_voltage(INJ_LO, unit='V')
         self.dut['INJ_HI'].set_voltage(INJ_LO, unit='V')
@@ -71,7 +71,7 @@ class NoiseScan(ScanBase):
         self.dut['control']['CLK_OUT_GATE'] = 1
         self.dut['control']['CLK_BX_GATE'] = 1
         self.dut['control'].write()
-        time.sleep(0.1)
+        time.sleep(0.01)
 
         self.dut['control']['RESET'] = 0b11
         self.dut['control'].write()
@@ -106,7 +106,7 @@ class NoiseScan(ScanBase):
         # self.dut['global_conf']['ColSrEn'][:] = bitarray.bitarray(columns)
         self.dut.write_global()
 
-        logging.info('Temperature: %s', str(self.dut['ntc'].get_temperature('C')))
+        #logging.info('Temperature: %s', str(self.dut['ntc'].get_temperature('C')))
 
         mask_en = np.zeros([64, 64], dtype=np.bool)
         mask_tdac = np.ones([64, 64], dtype=np.uint8)
@@ -210,7 +210,7 @@ class NoiseScan(ScanBase):
             if not corrected:
                 self.vth1Dac -= vthin1DacInc
 
-            time.sleep(0.1)
+            time.sleep(0.001)
 
             self.dut.write_en_mask(mask_en)
             self.dut.write_tune_mask(mask_tdac)
@@ -245,7 +245,7 @@ class NoiseScan(ScanBase):
         # scan_pix_hist, _ = plotting.scan_pix_hist(h5_filename)
 
         output_file(self.output_filename + '.html', title=self.run_name)
-        save(Column(hplot(occ_plot, tot_plot, lv1id_plot), t_dac, status_plot))
+        save(Column(Row(occ_plot, tot_plot, lv1id_plot), t_dac, status_plot))
 
 
 if __name__ == "__main__":

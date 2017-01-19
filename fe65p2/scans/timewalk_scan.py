@@ -26,27 +26,26 @@ for (r,c) in itertools.product(row,row):
 local_configuration = {
     "mask_steps": 4,
     "repeat_command": 101,
-    "scan_range": [0.05, 0.5, 0.01],
+    "scan_range": [0.01, 0.25, 0.01],
     "columns": [True] * 2 + [False] * 14,
-    "mask_filename": '',
-    "noise_mask":'',
-    "pix_list": [(2,6)],
+    "mask_filename": '/media/topcoup/TB/Prmp36_vthA255_vthB0_PreCmp100/col1/output_data/20170119_154940_noise_scan.h5',
+    "pix_list": [(2,6)] ,
      #DAC parameters
     "PrmpVbpDac": 36,
-    "vthin1Dac": 80,
+    "vthin1Dac": 255,
     "vthin2Dac": 0,
-    "vffDac" : 24,
+    "vffDac" : 42,
     "PrmpVbnFolDac" : 51,
     "vbnLccDac" : 1,
     "compVbnDac":25,
-    "preCompVbnDac" : 50
+    "preCompVbnDac" : 100
 }
 
 
 class TimewalkScan(ScanBase):
     scan_id = "timewalk_scan"
 
-    def scan(self, pix_list=((6, 20),), mask_steps=4, repeat_command=101, columns=[True] * 16, scan_range=[0, 1.2, 0.1], mask_filename='', **kwargs):
+    def scan(self, pix_list=[], mask_steps=4, repeat_command=101, columns=[True] * 16, scan_range=[], mask_filename='', **kwargs):
         '''Scan loop
         This scan is to measure time walk. The charge injection can be driven by the GPAC or an external device.
         In the latter case the device is Agilent 33250a connected through serial port.
@@ -67,10 +66,10 @@ class TimewalkScan(ScanBase):
                 vthrs1 = dac_status['vthin1Dac']
                 if vthrs1 < 244: vthrs1+=10
                 logging.info("Loaded vth1 from noise scan: %s", str(vthrs1))
-                return vthrs1
+                return int(vthrs1)
             else: return 80
 
-        vth1 = load_vthin1Dac(kwargs['noise_mask'])
+        vth1 = load_vthin1Dac(mask_filename)
         inj_factor = 1.0
         INJ_LO = 0.0
         try:
@@ -145,7 +144,7 @@ class TimewalkScan(ScanBase):
         self.dut['global_conf']['OneSr'] = 1
         self.dut.write_global()
 
-        self.dut['inj'].set_delay(50000)  # 1 zero more
+        self.dut['inj'].set_delay(10000)  # 1 zero more
         self.dut['inj'].set_width(1000)
         self.dut['inj'].set_repeat(repeat_command)
         self.dut['inj'].set_en(False)
@@ -167,7 +166,7 @@ class TimewalkScan(ScanBase):
         scan_range = np.arange(scan_range[0], scan_range[1], scan_range[2]) / inj_factor
         scan_range = np.append(scan_range, 0.3 / inj_factor)
         scan_range = np.append(scan_range, 0.6 / inj_factor)
-        scan_range = np.append(scan_range, 1.0 / inj_factor)
+        scan_range = np.append(scan_range, 0.7 / inj_factor)
         self.pixel_list = pix_list
 
         p_counter = 0
@@ -189,29 +188,35 @@ class TimewalkScan(ScanBase):
                 with self.readout(scan_param_id=idx + p_counter * len(scan_range)):
                     logging.info('Scan Parameter: %f (%d of %d)', k, idx + 1, len(scan_range))
                     self.dut['tdc']['ENABLE'] = True
-
-                    self.dut['global_conf']['vthin1Dac'] = 255
-                    self.dut['global_conf']['vthin2Dac'] = 0
-                    self.dut['global_conf']['PrmpVbpDac'] = 80
-                    self.dut['global_conf']['preCompVbnDac'] = 50
-                    self.dut.write_global()
-                    time.sleep(0.1)
-
                     self.dut['global_conf']['vthin1Dac'] = vth1
                     self.dut['global_conf']['vthin2Dac'] = kwargs['vthin2Dac']
-                    self.dut['global_conf']['PrmpVbpDac'] = kwargs['PrmpVbpDac']
-                    self.dut['global_conf']['preCompVbnDac'] = kwargs['preCompVbnDac']
+                    self.dut['global_conf']['PrmpVbpDac'] =  kwargs['PrmpVbpDac']
+                    self.dut['global_conf']['preCompVbnDac'] =  kwargs['preCompVbnDac']
+                    self.dut['global_conf']['vffDac'] =  kwargs['vffDac']
+                    self.dut['global_conf']['PrmpVbnFolDac'] =  kwargs['PrmpVbnFolDac']
+                    self.dut['global_conf']['vbnLccDac'] =  kwargs['vbnLccDac']
+                    self.dut['global_conf']['compVbnDac'] =  kwargs['compVbnDac']
                     self.dut.write_global()
                     time.sleep(0.1)
+                    self.dut.write_global()
+                    time.sleep(0.2)
+                    #self.dut['global_conf']['PrmpVbnFolDac'] = kwargs['PrmpVbnFolDac']
+                    #self.dut['global_conf']['vbnLccDac'] = kwargs['vbnLccDac']
+                    #self.dut['global_conf']['compVbnDac'] = kwargs['compVbnDac']
+                    #self.dut['global_conf']['preCompVbnDac'] = kwargs['preCompVbnDac']
+                    #self.dut.write_global()
+                    #time.sleep(0.1)
+                    #self.dut.write_global()
+                    #time.sleep(0.1)
 
                     self.dut['inj'].start()
 
                     while not self.dut['inj'].is_done():
-                        time.sleep(0.005)
+                        time.sleep(0.05)
                         pass
 
                     while not self.dut['trigger'].is_done():
-                        time.sleep(0.005)
+                        time.sleep(0.05)
                         pass
 
                     self.dut['tdc'].ENABLE = 0

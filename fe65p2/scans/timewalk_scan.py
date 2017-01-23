@@ -10,7 +10,6 @@ from bokeh.models.layouts import Column, Row
 import yaml
 from basil.dut import Dut
 import logging
-import math
 import os
 import itertools
 

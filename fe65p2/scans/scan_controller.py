@@ -31,7 +31,7 @@ par_conf = {
     "PrmpVbnFolDac" : 51,   #not subject to change
     "vbnLccDac" : 1,        #not subject to change
     "compVbnDac":25,        #not subject to change
-    "preCompVbnDac" : 100 }   #critical, 50 for digi_scan_freq. 50 or 110 def. va
+    "preCompVbnDac" : 110}   #critical, 50 for digi_scan_freq. 50 or 110 def. va
 
 #parameter folder name
 par_string = "Prmp"+str(par_conf['PrmpVbpDac']) +"_vthA"+str(par_conf['vthin1Dac'])+"_vthB"+str(par_conf['vthin2Dac'])\
@@ -245,10 +245,10 @@ if __name__ == "__main__":
 
     pow = power()
     pow.restart()
-    #loadbit = status_sc()
-    #loadbit.load_bit()
-    #temp = temp_sc()
-    #temp.measure_temp()
+    loadbit = status_sc()
+    loadbit.load_bit()
+    temp = temp_sc()
+    temp.measure_temp()
 
     #logging.basicConfig(filename='example.log', filemode='w', level=logging.DEBUG)
     for keys,values in par_conf.items():
@@ -309,7 +309,7 @@ if __name__ == "__main__":
 
         time.sleep(1)
         '''
-        for i in range(1,2):
+        for i in range(1,9):
 
             pow.restart()
             temp2 = temp_sc()
@@ -325,16 +325,16 @@ if __name__ == "__main__":
                 os.makedirs(col_dir)
             os.chdir(col_dir)
 
-            #unt_thrs_mask = thresh_sc_unt('')
-            #time.sleep(2.0)
+            unt_thrs_mask = thresh_sc_unt('')
+            time.sleep(2.0)
             noise_masks = noise_sc()
             time.sleep(2.0)
             thrs_mask, musigma = thresh_sc_tuned(noise_masks)
             time.sleep(2.0)
             
-            if i==1:
-                pixels = time_pixels(i)
-                timewalk_sc(noise_masks, noise_masks, pixels, 1, 2)
+            #if i==1:
+            pixels = time_pixels(i)
+            timewalk_sc(noise_masks, noise_masks, pixels, 1, 2)
                 #timewalk_sc('/media/topcoup/TB/Prmp36_vthA255_vthB0_PreCmp110/col1/output_data/20170118_150711_noise_scan.h', '/media/topcoup/TB/Prmp36_vthA255_vthB0_PreCmp110/col1/output_data/20170118_151242_tu_threshold_scan.h5', pixels, 0.05, 0.007 )
                 #timewalk_sc('/media/topcoup/TB/Prmp36_vthA255_vthB0_PreCmp110/col1/output_data/20170118_151242_tu_threshold_scan.h5', '/media/topcoup/TB/Prmp36_vthA255_vthB0_PreCmp110/col1/output_data/20170118_151242_tu_threshold_scan.h5', pixels, 0.05, 0.007)
 

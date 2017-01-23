@@ -44,4 +44,4 @@ class power(object):
 
 if __name__ == "__main__":
     supply = power()
-    supply.switch_on()
+    supply.switch_off()

@@ -95,21 +95,21 @@ def timewalk_sc(noise_mask, th_mask, pix_list, mu, sigma):
     time_sc = TimewalkScan()
     range_min = 0.005
     range_max = mu + 10.0*sigma
-    step = 0.05
+    step = 0.005
     logging.info('TIMEWALK mu, min, max, step: %f %f %f %f', mu,range_min,range_max, step)
     print 'TIMEWALK receiving ', mu, sigma
     custom_conf = {
         "mask_steps" : 4,
         "repeat_command" : 101,
-        #"scan_range" : [range_min,range_max, step],
-        "scan_range":  [0.01, 0.25, 0.01],
+        "scan_range" : [range_min,range_max, step],
+        #"scan_range":  [0.01, 0.25, 0.01],
         "mask_filename":th_mask,
         "pix_list":pix_list
     }
     scan_conf = dict(par_conf, **custom_conf)
     scanrange=custom_conf["scan_range"]
     time_sc.start(**scan_conf)
-    time_sc.tdc_table(len(np.arange(scanrange[0], scanrange[1], scanrange[2]))+3)
+    time_sc.tdc_table(len(np.arange(scanrange[0], scanrange[1], scanrange[2]))+2)
     time_sc.dut.close()
 
 def digi_sc():
@@ -227,13 +227,13 @@ class temp_sc(ScanBase):
 
 def time_pixels(col):
     lp = []
-    if col==1: lp=[(2,6), (6,20)]
-    if col==2: lp=[(6,20),(14,10)]
+    if col==1: lp=[(2,6), (3,3)]
+    if col==2: lp=[(9,20),(14,10)]
     if col==3: lp=[(20,20),(22,18)]
     if col==4: lp=[(28,28),(30,31)]
     if col==5: lp=[(36,36),(38,34)]
     if col==6: lp=[(44,44),(44,42)]
-    if col==7: lp=[(49,49),(50,48)]
+    if col==7: lp=[(48,49),(50,48)]
     if col==8: lp=[(56,56),(58,58)]
     return lp
 
@@ -309,11 +309,11 @@ if __name__ == "__main__":
 
         time.sleep(1)
         '''
-        for i in range(1,9):
+        for i in range(7,8):
 
             pow.restart()
-            temp2 = temp_sc()
-            temp2.measure_temp()
+            #temp2 = temp_sc()
+            #temp2.measure_temp()
 
             cols = [False]*16
             j=2*i-1
@@ -334,9 +334,7 @@ if __name__ == "__main__":
             
             #if i==1:
             pixels = time_pixels(i)
-            timewalk_sc(noise_masks, noise_masks, pixels, 1, 2)
-                #timewalk_sc('/media/topcoup/TB/Prmp36_vthA255_vthB0_PreCmp110/col1/output_data/20170118_150711_noise_scan.h', '/media/topcoup/TB/Prmp36_vthA255_vthB0_PreCmp110/col1/output_data/20170118_151242_tu_threshold_scan.h5', pixels, 0.05, 0.007 )
-                #timewalk_sc('/media/topcoup/TB/Prmp36_vthA255_vthB0_PreCmp110/col1/output_data/20170118_151242_tu_threshold_scan.h5', '/media/topcoup/TB/Prmp36_vthA255_vthB0_PreCmp110/col1/output_data/20170118_151242_tu_threshold_scan.h5', pixels, 0.05, 0.007)
+            timewalk_sc(thrs_mask, thrs_mask, pixels, musigma['mu'], musigma['sigma'])
 
             pow.restart()
             os.chdir('..')

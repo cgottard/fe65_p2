@@ -45,25 +45,21 @@ class TimewalkScan(ScanBase):
     scan_id = "timewalk_scan"
 
     def scan(self, mask_steps=4, repeat_command=101, columns=[True] * 16, pix_list=[], scan_range=[], mask_filename='', **kwargs):
+
         '''Scan loop
         This scan is to measure time walk. The charge injection can be driven by the GPAC or an external device.
         In the latter case the device is Agilent 33250a connected through serial port.
         The time walk and TOT are measured by a TDC module in the FPGA.
         The output is an .h5 file (data) and an .html file with plots.
 
-        Parameters
-        ----------
-        mask : int
-            Number of mask steps.
-        repeat : int
-            Number of injections.
+        To perform a proper timewalk scan a mask_filename i.e. the output of the tuned threshold scan has to be provided.
         '''
+
         def load_vthin1Dac(mask):
             if os.path.exists(mask):
                 in_file = tb.open_file(mask, 'r')
                 dac_status = yaml.load(in_file.root.meta_data.attrs.dac_status)
                 vthrs1 = dac_status['vthin1Dac']
-                if vthrs1 < 244: vthrs1+=10
                 logging.info("Loaded vth1 from noise scan: %s", str(vthrs1))
                 return int(vthrs1)
             else: return 29
@@ -163,9 +159,9 @@ class TimewalkScan(ScanBase):
         self.dut['tdc']['EN_WRITE_TIMESTAMP'] = True
 
         scan_range = np.arange(scan_range[0], scan_range[1], scan_range[2]) / inj_factor
-        #scan_range = np.append(scan_range, 0.3 / inj_factor)
-        #scan_range = np.append(scan_range, 0.6 / inj_factor)
-        scan_range = np.append(scan_range, 0.7 / inj_factor)
+        scan_range = np.append(scan_range, 0.3 / inj_factor)
+        scan_range = np.append(scan_range, 0.5 / inj_factor)
+        #scan_range = np.append(scan_range, 0.7 / inj_factor)
         self.pixel_list = pix_list
 
         p_counter = 0
@@ -374,4 +370,4 @@ if __name__ == "__main__":
     Timescan = TimewalkScan()
     Timescan.start(**local_configuration)
     scanrange = local_configuration['scan_range']
-    Timescan.tdc_table(len(np.arange(scanrange[0], scanrange[1], scanrange[2]))+1)
+    Timescan.tdc_table(len(np.arange(scanrange[0], scanrange[1], scanrange[2]))+2)

@@ -5,7 +5,7 @@ import time
 import numpy as np
 import bitarray
 import tables as tb
-from bokeh.charts import output_file, save
+from bokeh.charts import output_file, save, show
 from bokeh.models.layouts import Column, Row
 import yaml
 from basil.dut import Dut
@@ -364,6 +364,7 @@ class TimewalkScan(ScanBase):
         output_file(self.output_filename + '.html', title=self.run_name)
         status = plotting.plot_status(h5_filename)
         save(Row(Column(p1, p2, status), single_scan))
+        show(p1)
 
 
 if __name__ == "__main__":

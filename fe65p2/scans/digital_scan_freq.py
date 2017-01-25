@@ -203,7 +203,8 @@ class DigitalScanFreq(object):
                 self.dut['global_conf']['PrmpVbnFolDac'] = kwargs['PrmpVbnFolDac']
                 self.dut['global_conf']['vbnLccDac'] = kwargs['vbnLccDac']
                 self.dut['global_conf']['compVbnDac'] = kwargs['compVbnDac']
-                self.dut['global_conf']['preCompVbnDac'] = 50
+                self.dut['global_conf']['preCompVbnDac'] = 50 #kwargs.get('preCompVbnDac',50)
+                self.dut.write_global()
 
 
                 logging.info(self.dut.power_status())  # prints power supply
@@ -299,11 +300,11 @@ class DigitalScanFreq(object):
                             logging.debug('.')
 
                         while not self.dut['testhit'].is_done():
-                            time.sleep(0.005)
+                            #time.sleep(0.005)
                             pass
 
                         while not self.dut['trigger'].is_done():
-                            time.sleep(0.005)
+                            #time.sleep(0.005)
                             pass
 
                         # just some time for last read

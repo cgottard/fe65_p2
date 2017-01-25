@@ -10,7 +10,7 @@ logging.basicConfig(level=logging.INFO,
 import numpy as np
 import bitarray
 import tables as tb
-from bokeh.charts import output_file, hplot, save
+from bokeh.charts import output_file, hplot, save, show
 from bokeh.models.layouts import Column, Row
 from progressbar import ProgressBar
 import os
@@ -245,7 +245,8 @@ class NoiseScan(ScanBase):
         # scan_pix_hist, _ = plotting.scan_pix_hist(h5_filename)
 
         output_file(self.output_filename + '.html', title=self.run_name)
-        save(Column(Row(occ_plot, tot_plot, lv1id_plot), t_dac, status_plot))
+        save(Column(Row(occ_plot, tot_plot), t_dac, status_plot))
+        show(t_dac)
 
 
 if __name__ == "__main__":

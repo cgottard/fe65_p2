@@ -7,7 +7,7 @@ import logging
 import numpy as np
 import bitarray
 import tables as tb
-from bokeh.charts import output_file, save
+from bokeh.charts import output_file, save, show
 from bokeh.models.layouts import Column, Row
 from progressbar import ProgressBar
 from basil.dut import Dut
@@ -243,6 +243,7 @@ class ThresholdScanTuned(ScanBase):
 
         output_file(self.output_filename + '.html', title=self.run_name)
         save(Column(Row(occ_plot, tot_plot, lv1id_plot), scan_pix_hist, t_dac, status_plot))
+        show(scan_pix_hist)
         logging.info('Returnin')
         return fit_res
 

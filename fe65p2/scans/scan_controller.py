@@ -31,7 +31,7 @@ par_conf = {
     "PrmpVbnFolDac" : 51,   #not subject to change
     "vbnLccDac" : 1,        #not subject to change
     "compVbnDac":25,        #not subject to change
-    "preCompVbnDac" : 110}   #critical, 50 for digi_scan_freq. 50 or 110 def. va
+    "preCompVbnDac" : 100}   #critical, 50 for digi_scan_freq. 50 or 110 def. va
 
 #parameter folder name
 par_string = "Prmp"+str(par_conf['PrmpVbpDac']) +"_vthA"+str(par_conf['vthin1Dac'])+"_vthB"+str(par_conf['vthin2Dac'])\
@@ -61,7 +61,7 @@ def thresh_sc_unt(noise_mask_file=''):
     custom_conf = {
         "mask_steps": 4,
         "repeat_command": 100,
-        "scan_range": [0.2, 0.8, 0.01], #[0.0, 0.6, 0.01],
+        "scan_range": [0.10, 0.7, 0.01], #[0.0, 0.6, 0.01],
         "mask_filename": noise_mask_file,
         "TDAC" : 16
     }
@@ -79,7 +79,7 @@ def thresh_sc_tuned(noise_mask_file=''):
     custom_conf = {
         "mask_steps": 4,
         "repeat_command": 100,
-        "scan_range": [0.005, 0.25, 0.005], #[0.0, 0.6, 0.01],
+        "scan_range": [0.005, 0.20, 0.005], #[0.0, 0.6, 0.01],
         "mask_filename": noise_mask_file,
         "TDAC" : 16
     }
@@ -192,38 +192,39 @@ class status_sc(ScanBase):
         self.dut['global_conf']['PrmpVbnFolDac'] = 51
         self.dut['global_conf']['vbnLccDac'] = 1
         self.dut['global_conf']['compVbnDac'] = 25
-        self.dut['global_conf']['preCompVbnDac'] = 50
-        logging.info('Power Status: %s', str(self.dut.power_status()))
-        logging.info('DAC Status: %s', str(self.dut.dac_status()))
-        self.dut.close()
-
-class temp_sc(ScanBase):
-    scan_id = "temp_scan"
+        self.dut['global_conf']['preCompVbnDac'] = 110
 
     def measure_temp(self):
-        N=200
+        logging.info('Power Status: %s', str(self.dut.power_status()))
+        logging.info('DAC Status: %s', str(self.dut.dac_status()))
+        N=1000
         temp=0.0
+        buf = []
         for m in range(0, N):
-            temp += self.dut['ntc'].get_temperature('C')
+            t=self.dut['ntc'].get_temperature('C')
+            buf.append(t)
+            temp += t
         temp_avg = temp/float(N)
         t_log = time.strftime("%d-%b-%H:%M:%S") + "\t" + str(temp_avg) + "\n"
+        print t_log
         logname = 'reg_temp.dat'
         legend = "Time \t \t temp(C) \n"
-        if not os.path.exists("./"+logname):
+        if not os.path.exists("./" + logname):
             with open(logname, "a") as t_file:
                 t_file.write(legend)
         with open(logname, "a") as t_file:
             t_file.write(t_log)
         self.dut.close()
+        #n, bins, patches = plt.hist(buf, 8, facecolor='green', alpha=0.75)
+        #plt.xlabel('Temperature (C)')
+        #plt.ylabel('Count')
+        #plt.title('ISRC 7')
+        #plt.axis([22, 25, 0, N/2])
+        #plt.grid(True)
+        #plt.show()
 
 
-# n, bins, patches = plt.hist(buf, 10, facecolor='green', alpha=0.75)
-# plt.xlabel('Current (uA)')
-# plt.ylabel('Count')
-# plt.title('ISRC 7')
-# plt.axis([90, 110, 0, N/5])
-# plt.grid(True)
-# plt.show()
+
 
 def time_pixels(col):
     lp = []
@@ -247,8 +248,7 @@ if __name__ == "__main__":
     pow.restart()
     loadbit = status_sc()
     loadbit.load_bit()
-    temp = temp_sc()
-    temp.measure_temp()
+    loadbit.measure_temp()
 
     #logging.basicConfig(filename='example.log', filemode='w', level=logging.DEBUG)
     for keys,values in par_conf.items():
@@ -266,7 +266,7 @@ if __name__ == "__main__":
         #for just 1 iteration
         if c==1: break
         #column independent scans
-        '''
+
         time.sleep(1)
 
         print '*** CMD SCAN ***'
@@ -299,7 +299,7 @@ if __name__ == "__main__":
         print '*** DIGI SCAN ***'
         loadbit = status_sc()
         loadbit.load_bit()
-        
+
         dir = os.path.join(os.getcwd(), "DIGI_scan")
         if not os.path.exists(dir):
             os.makedirs(dir)
@@ -308,12 +308,13 @@ if __name__ == "__main__":
         os.chdir('..')
 
         time.sleep(1)
-        '''
-        for i in range(7,8):
+
+        for i in range(1,8):
 
             pow.restart()
-            #temp2 = temp_sc()
-            #temp2.measure_temp()
+            loadbit2 = status_sc()
+            loadbit2.load_bit()
+            loadbit2.measure_temp()
 
             cols = [False]*16
             j=2*i-1

@@ -246,7 +246,7 @@ class NoiseScan(ScanBase):
 
         output_file(self.output_filename + '.html', title=self.run_name)
         save(Column(Row(occ_plot, tot_plot), t_dac, status_plot))
-        show(t_dac)
+        #show(t_dac)
 
 
 if __name__ == "__main__":

@@ -364,7 +364,7 @@ class TimewalkScan(ScanBase):
         output_file(self.output_filename + '.html', title=self.run_name)
         status = plotting.plot_status(h5_filename)
         save(Row(Column(p1, p2, status), single_scan))
-        show(p1)
+        #show(p1)
 
 
 if __name__ == "__main__":

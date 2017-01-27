@@ -44,7 +44,7 @@ local_configuration = {
     "PrmpVbnFolDac" : 51,   #not subject to change
     "vbnLccDac" : 1,        #not subject to change
     "compVbnDac":25,        #not subject to change
-    "preCompVbnDac" : 110,
+    "preCompVbnDac" : 50,
 }
 
 '''
@@ -300,11 +300,11 @@ class DigitalScanFreq(object):
                             logging.debug('.')
 
                         while not self.dut['testhit'].is_done():
-                            #time.sleep(0.005)
+                            time.sleep(0.005)
                             pass
 
                         while not self.dut['trigger'].is_done():
-                            #time.sleep(0.005)
+                            time.sleep(0.005)
                             pass
 
                         # just some time for last read

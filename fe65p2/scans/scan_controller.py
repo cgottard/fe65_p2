@@ -176,8 +176,8 @@ def pix_reg_sc():
 class status_sc(ScanBase):
     scan_id = "status_scan"
 
-    def load_bit(self):
-        self.dut['intf']._sidev.DownloadXilinx(fe65p2_path+"/firmware/ise/fe65p2_mio.bit")
+    def load_bit(self, bit):
+        if(bit==True): self.dut['intf']._sidev.DownloadXilinx(fe65p2_path+"/firmware/ise/fe65p2_mio.bit")
         self.dut['VDDA'].set_current_limit(200, unit='mA')
         self.dut['VDDA'].set_voltage(1.2, unit='V')
         self.dut['VDDA'].set_enable(True)
@@ -247,7 +247,7 @@ if __name__ == "__main__":
     pow = power()
     pow.restart()
     loadbit = status_sc()
-    loadbit.load_bit()
+    loadbit.load_bit(True)
     loadbit.measure_temp()
 
     #logging.basicConfig(filename='example.log', filemode='w', level=logging.DEBUG)
@@ -264,9 +264,9 @@ if __name__ == "__main__":
 
     for c in cycle(range(0,2)): #goes on forever
         #for just 1 iteration
-        if c==1: break
-        #column independent scans
+        #if c==1: break
 
+        #column independent scans
         time.sleep(1)
 
         print '*** CMD SCAN ***'
@@ -277,7 +277,8 @@ if __name__ == "__main__":
         digi_shmoo_sc_cmd()
         os.chdir('..')
 
-        time.sleep(1)
+        pow.restart()
+
         print '*** DATA SCAN ***'
         dir = os.path.join(os.getcwd(), "DATA_shmoo")
         if not os.path.exists(dir):
@@ -285,8 +286,9 @@ if __name__ == "__main__":
         os.chdir(dir)
         digi_shmoo_sc_data()
         os.chdir('..')
-        
-        time.sleep(1)
+
+        pow.restart()
+
         print '*** PIX REG SCAN ***'
         dir = os.path.join(os.getcwd(), "PIX_shmoo")
         if not os.path.exists(dir):
@@ -296,25 +298,25 @@ if __name__ == "__main__":
         os.chdir('..')
 
         time.sleep(1)
-        print '*** DIGI SCAN ***'
-        loadbit = status_sc()
-        loadbit.load_bit()
+        #print '*** DIGI SCAN ***'
+        #loadbit = status_sc(True)
+        #loadbit.load_bit()
+        #
+        #dir = os.path.join(os.getcwd(), "DIGI_scan")
+        #if not os.path.exists(dir):
+        #    os.makedirs(dir)
+        #os.chdir(dir)
+        #digi_sc()
+        #os.chdir('..')
+        #time.sleep(1)
 
-        dir = os.path.join(os.getcwd(), "DIGI_scan")
-        if not os.path.exists(dir):
-            os.makedirs(dir)
-        os.chdir(dir)
-        digi_sc()
-        os.chdir('..')
-
-        time.sleep(1)
-
-        for i in range(1,8):
+        for i in range(1,9):   #1 to 9 for all columns
 
             pow.restart()
             loadbit2 = status_sc()
-            loadbit2.load_bit()
+            loadbit2.load_bit(True)
             loadbit2.measure_temp()
+
 
             cols = [False]*16
             j=2*i-1
@@ -327,17 +329,17 @@ if __name__ == "__main__":
             os.chdir(col_dir)
 
             unt_thrs_mask = thresh_sc_unt('')
-            time.sleep(2.0)
+            time.sleep(1.0)
             noise_masks = noise_sc()
-            time.sleep(2.0)
+            time.sleep(1.0)
             thrs_mask, musigma = thresh_sc_tuned(noise_masks)
-            time.sleep(2.0)
+            time.sleep(1.0)
             
             #if i==1:
             pixels = time_pixels(i)
             timewalk_sc(thrs_mask, thrs_mask, pixels, musigma['mu'], musigma['sigma'])
 
-            pow.restart()
+            #pow.restart()
             os.chdir('..')
 
         par_conf['columns'] = [True]*16

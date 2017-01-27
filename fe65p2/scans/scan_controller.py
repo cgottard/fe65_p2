@@ -31,7 +31,7 @@ par_conf = {
     "PrmpVbnFolDac" : 51,   #not subject to change
     "vbnLccDac" : 1,        #not subject to change
     "compVbnDac":25,        #not subject to change
-    "preCompVbnDac" : 100}   #critical, 50 for digi_scan_freq. 50 or 110 def. va
+    "preCompVbnDac" : 110}   #critical, 50 for digi_scan_freq. 50 or 110 def. va
 
 #parameter folder name
 par_string = "Prmp"+str(par_conf['PrmpVbpDac']) +"_vthA"+str(par_conf['vthin1Dac'])+"_vthB"+str(par_conf['vthin2Dac'])\
@@ -265,7 +265,7 @@ if __name__ == "__main__":
     for c in cycle(range(0,2)): #goes on forever
         #for just 1 iteration
         if c==1: break
-
+        '''
         #column independent scans
         time.sleep(1)
 
@@ -309,7 +309,7 @@ if __name__ == "__main__":
         #digi_sc()
         #os.chdir('..')
         #time.sleep(1)
-
+        '''
         for i in range(1,9):   #1 to 9 for all columns
 
             pow.restart()

@@ -109,7 +109,8 @@ class NoiseScan(ScanBase):
         #logging.info('Temperature: %s', str(self.dut['ntc'].get_temperature('C')))
 
         mask_en = np.zeros([64, 64], dtype=np.bool)
-        mask_tdac = np.ones([64, 64], dtype=np.uint8)
+        #mask_tdac = np.ones([64, 64], dtype=np.uint8)
+        mask_tdac = np.full([64,64], 16, dtype=np.uint8)
 
         for inx, col in enumerate(columns):
             if col:

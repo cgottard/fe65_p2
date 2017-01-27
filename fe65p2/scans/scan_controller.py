@@ -233,7 +233,7 @@ def time_pixels(col):
     if col==3: lp=[(20,20),(22,18)]
     if col==4: lp=[(28,28),(30,31)]
     if col==5: lp=[(36,36),(38,34)]
-    if col==6: lp=[(44,44),(44,42)]
+    if col==6: lp=[(44,44),(44,12)]
     if col==7: lp=[(48,49),(50,48)]
     if col==8: lp=[(56,56),(58,58)]
     return lp
@@ -264,7 +264,7 @@ if __name__ == "__main__":
 
     for c in cycle(range(0,2)): #goes on forever
         #for just 1 iteration
-        #if c==1: break
+        if c==1: break
 
         #column independent scans
         time.sleep(1)
